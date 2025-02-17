@@ -5,6 +5,7 @@ export enum DOMAIN {
   FINANCE = 'FINANCE',
   MOBILITY = 'MOBILITY',
   RSF = 'RSF',
+  ONEST = 'ONEST',
 }
 
 export enum ERROR_MESSAGE {

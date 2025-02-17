@@ -30,6 +30,7 @@ const getEnumForDomain = (path: string) => {
   if (path.includes('validate') || path.includes('retail')) return DOMAIN.RETAIL
   if (path.includes('igm')) return DOMAIN.IGM
   if (path.includes('rsf')) return DOMAIN.RSF
+  if (path.includes('onest')) return DOMAIN.ONEST
   throw new Error('Domain could not be detected')
 }
 const validateRetail = async (
@@ -219,6 +220,14 @@ const validateRSF = async (payload: string, version: string) => {
 
   return { response, success, message }
 }
+const validateONEST = async (_payload: string, _flow?: string ) => {
+  logger.info('Entering validateONEST function')
+  let response
+  let success = false
+  let message = ERROR_MESSAGE.LOG_VERIFICATION_UNSUCCESSFUL
+
+  return { response, success, message }
+}
 
 const getFinanceValidationFormat = (domain: string, version: string) => {
   switch (domain) {
@@ -237,5 +246,6 @@ export default {
   validateRSF,
   getFinanceValidationFormat,
   getEnumForDomain,
+  validateONEST,
   createSignature,
 }
