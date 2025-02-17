@@ -1,72 +1,70 @@
-export const action = {
-    SEARCH: "Search",
-    SEARCH_INC: "Search_Inc",
-    SELECT: "Select",
-    INIT: "Init",
-    CONFIRM: "Confirm",
-    UPDATE: "Update"
-};
+export const actions = {
+    SEARCH: "search",
+    SEARCH_INC: "search_inc",
+    SELECT: "select",
+    INIT: "init",
+    CONFIRM: "confirm",
+    UPDATE: "update",
 
-export const onAction = {
-    ON_SEARCH: "On_Search",
-    ON_SEARCH_INC: "On_Search_Inc",
-    ON_SELECT: "On_Select",
-    ON_INIT: "On_Init",
-    ON_CONFIRM: "On_Confirm",
-    ON_STATUS: "On_Status",
-    ON_UPDATE: "On_Update"
+    ON_SEARCH: "on_search",
+    ON_SEARCH_INC: "on_search_inc",
+    ON_SELECT: "on_select",
+    ON_INIT: "on_init",
+    ON_CONFIRM: "on_confirm",
+    ON_STATUS: "on_status",
+    ON_UPDATE: "on_update"
 };
 
 // This will store all the error reason codes for ONEST.
-export const reasonCodes = {
-}
+export const reasonCodes = {};
 
 // This will include all the valid flows
 export const onestFlows = {
-    Flow_1: 'Flow_1',
-    Flow_2: 'Flow_2',
-    Flow_3: 'Flow_3',
-}
+    Flow_1: "Flow_1",
+    Flow_2: "Flow_2",
+    Flow_3: "Flow_3"
+};
 
+// Function to get the order of actions for each flow
 export function flowOrder(flow: string): string[] {
     switch (flow) {
         case onestFlows.Flow_1:
             return [
-                action.SEARCH,
-                onAction.ON_SEARCH,
-                action.SEARCH_INC,
-                onAction.ON_SEARCH_INC
+                actions.SEARCH,
+                actions.ON_SEARCH,
+                actions.SEARCH_INC,
+                actions.ON_SEARCH_INC
             ];
         case onestFlows.Flow_2:
             return [
-                action.SEARCH,
-                onAction.ON_SEARCH,
-                action.SELECT,
-                onAction.ON_SELECT,
-                action.INIT,
-                onAction.ON_INIT,
-                action.CONFIRM,
-                onAction.ON_CONFIRM,
-                onAction.ON_STATUS,
-                onAction.ON_STATUS,
-                onAction.ON_STATUS,
-                onAction.ON_UPDATE,
-                action.UPDATE,
-                onAction.ON_UPDATE
+                actions.SEARCH,
+                actions.ON_SEARCH,
+                actions.SELECT,
+                actions.ON_SELECT,
+                actions.INIT,
+                actions.ON_INIT,
+                actions.CONFIRM,
+                actions.ON_CONFIRM,
+                actions.ON_STATUS,
+                actions.ON_STATUS,
+                actions.ON_STATUS,
+                actions.ON_UPDATE,
+                actions.UPDATE,
+                actions.ON_UPDATE
             ];
         case onestFlows.Flow_3:
             return [
-                action.SEARCH,
-                onAction.ON_SEARCH,
-                action.SELECT,
-                onAction.ON_SELECT,
-                action.INIT,
-                onAction.ON_INIT,
-                action.CONFIRM,
-                onAction.ON_CONFIRM,
-                onAction.ON_STATUS
+                actions.SEARCH,
+                actions.ON_SEARCH,
+                actions.SELECT,
+                actions.ON_SELECT,
+                actions.INIT,
+                actions.ON_INIT,
+                actions.CONFIRM,
+                actions.ON_CONFIRM,
+                actions.ON_STATUS
             ];
         default:
-            throw new Error('Flow for onest does not exist!');
+            return [];
     }
 }

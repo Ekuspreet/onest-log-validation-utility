@@ -64,14 +64,17 @@ const controller = {
           break
         case DOMAIN.ONEST:
           {
-            const { response, success, message } = await helper.validateONEST( domain,
+            const { response, success, message } = await helper.validateONEST(
+              domain,
               payload,
               version,
               flow,
               bap_id,
-              bpp_id)
+              bpp_id,
+            )
             result = { response, success, message }
           }
+
           break
         default:
           throw new Error('Internal server error')

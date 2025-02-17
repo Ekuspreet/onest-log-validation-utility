@@ -10,6 +10,7 @@ import { validateLogsForFIS10 } from '../../shared/Actions/FIS10Actions'
 import { validateLogsForFIS13 } from '../../shared/Actions/FIS13Actions'
 import { validateLogsForTRV13 } from '../../shared/Actions/TRV13Actions'
 import { getFis14Format, validateLogsForFIS14 } from '../../shared/Actions/FIS14Actions'
+import { validateOnestLogs } from '../../shared/validateOnest'
 
 const createSignature = async ({ message }: { message: string }) => {
   const privateKey = process.env.SIGN_PRIVATE_KEY as string
@@ -220,11 +221,38 @@ const validateRSF = async (payload: string, version: string) => {
 
   return { response, success, message }
 }
-const validateONEST = async (_payload: string, _flow?: string ) => {
-  logger.info('Entering validateONEST function')
+const validateONEST =  async (
+  domain: string,
+  payload: string,
+  version: string,
+  flow: string,
+  bap_id: string,
+  bpp_id: string,
+) => {
+  logger.info('Entering validate ONEST function')
   let response
   let success = false
   let message = ERROR_MESSAGE.LOG_VERIFICATION_UNSUCCESSFUL
+
+  if (!bap_id || !bpp_id || !flow) {
+    message = ERROR_MESSAGE.LOG_VERIFICATION_INVALID_PAYLOAD
+    return { response, success, message }
+  }
+
+  switch (version) {
+    case '2.0.0':
+      response = await validateOnestLogs(payload, domain, flow)
+
+      if (_.isEmpty(response)) {
+        success = true
+        message = ERROR_MESSAGE.LOG_VERIFICATION_SUCCESSFUL
+      }
+
+      break
+    default:
+      message = ERROR_MESSAGE.LOG_VERIFICATION_INVALID_VERSION
+      logger.warn('Invalid Version!!')
+  }
 
   return { response, success, message }
 }
