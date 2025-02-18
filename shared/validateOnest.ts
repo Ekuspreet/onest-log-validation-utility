@@ -33,7 +33,7 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
                logger.info(logReport, 'Report Generated Successfully!!')
                return logReport
              } else {
-               return { invldFlow: 'Provided flow is invalid' }
+               return { invalidFlow: 'Provided flow is invalid' }
            }
    }
    
@@ -86,6 +86,8 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
         case onestFlows.Flow_3:
             logReport = processApiFlow( payload, onestFlows.Flow_1,  logReport, msgIdSet)
             break
+        default:
+          return { invalidFlow: 'Provided flow is invalid' }
     }
 
     return logReport

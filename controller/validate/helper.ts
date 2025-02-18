@@ -247,7 +247,10 @@ const validateONEST =  async (
         success = true
         message = ERROR_MESSAGE.LOG_VERIFICATION_SUCCESSFUL
       }
-
+      if(response.invalidFlow) {
+        success = false
+        message = ERROR_MESSAGE.LOG_VERIFICATION_INVALID_FLOW
+      }
       break
     default:
       message = ERROR_MESSAGE.LOG_VERIFICATION_INVALID_VERSION
