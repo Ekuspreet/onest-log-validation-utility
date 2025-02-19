@@ -214,6 +214,37 @@ const validate_schema_for_retail_json = (vertical: string, api: string, data: an
   return res
 }
 
+const validate_schema_for_onest_json = (vertical: string, api: string, data: any) => {
+  const res = (schemaValidator as any)[`validate_schema_${api}_${vertical}_for_json`](data)
+
+  return res
+}
+
+export const validateOnestSchema = (domain: string, api: string, data: any) => {
+  try {
+    logger.info(`Inside Schema Validation for domain: ${domain}, api: ${api}`)
+    const errObj: any = {}
+
+    const schmaVldtr = validate_schema_for_onest_json(domain, api, data)
+
+    const datavld = schmaVldtr
+    if (datavld.status === 'fail') {
+      const res = datavld.errors
+      let i = 0
+      const len = res.length
+      while (i < len) {
+        const key = `schemaErr${i}`
+        errObj[key] = `${res[i].details} ${res[i].message}`
+        i++
+      }
+
+      return errObj
+    } else return 'error'
+  } catch (e: any) {
+    logger.error(`Some error occured while validating schema, ${e.stack}`)
+  }
+}
+
 export const validateSchema = (domain: string, api: string, data: any) => {
   try {
     logger.info(`Inside Schema Validation for domain: ${domain}, api: ${api}`)

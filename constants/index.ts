@@ -67,6 +67,7 @@ export const ApiSequence = {
   TRACK: 'track',
   ON_TRACK: 'on_track',
   STATUS: 'status',
+  ON_STATUS: 'on_status',
   ON_STATUS_PENDING: 'on_status_pending',
   ON_STATUS_PACKED: 'on_status_packed',
   ON_STATUS_PICKED: 'on_status_picked',
@@ -442,6 +443,9 @@ export const retailDomains = [
   'ONDC:AGR10',
   'ONDC:RET1A',
 ]
+
+export const onestDomains = ['ONEST:10', 'ONEST:11', 'ONEST:12', 'ONEST:13', 'ONEST:14']
+
 export const ROUTING_ENUMS = ['P2P', 'P2H2P']
 export const MOB_VEHICLE_CATEGORIES = ['AUTO_RICKSHAW', 'CAB', 'METRO', 'BUS', 'AIRLINE']
 export const ON_DEMAND_VEHICLE = ['AUTO_RICKSHAW', 'CAB']
