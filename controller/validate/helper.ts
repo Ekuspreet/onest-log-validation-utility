@@ -241,7 +241,7 @@ const validateONEST =  async (
 
   switch (version) {
     case '2.0.0':
-      response = await validateOnestLogs(payload, domain, flow)
+      response = await validateOnestLogs(payload, domain, flow, version)
 
       if (_.isEmpty(response)) {
         success = true

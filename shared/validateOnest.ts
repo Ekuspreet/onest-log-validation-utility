@@ -4,7 +4,7 @@ import { logger } from './logger'
 import { setValue } from './dao'
 import * as Onest from '../utils/Onest'
 
-export const validateOnestLogs = async (payload: any, domain: string, flow: string) => {
+export const validateOnestLogs = async (payload: any, domain: string, flow: string, version: string) => {
   try {
     const msgIdSet = new Set<string>()
     // const quoteTrailItemsSet = new Set<object>()
@@ -13,10 +13,10 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
 
     setValue('flow', flow)
     setValue('domain', domain.split(':')[1])
+    setValue('version', version)
     let logReport: any = {}
 
     function processApiFlow(payload: any, flow: string, logReport: any, msgIdSet: Set<string>) {
-
       // Checking if the flow is a valid flow.
       // flowOrder returns the array of action suquences based on the flow. Returns empty array if the flow doesn't exist.
       const apiSequence = flowOrder(flow)

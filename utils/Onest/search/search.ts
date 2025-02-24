@@ -41,7 +41,7 @@ export function checkSearch(data: any, msgIdSet: any) {
 
     try {
       logger.info(`Checking for context in /context for ${actions.SEARCH} API`)
-      const contextRes: any = checkOnestContext(data.context, actions.SEARCH)
+      const contextRes: any = checkOnestContext(data.context, actions.SEARCH, msgIdSet)
       setValue(`${actions.SEARCH}_context`, data.context)
 
       if (!contextRes?.valid) {
