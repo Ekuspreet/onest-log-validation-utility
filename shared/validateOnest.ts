@@ -4,7 +4,6 @@ import { logger } from './logger'
 import { setValue } from './dao'
 import * as Onest from '../utils/Onest'
 
-// flowOrder returns the order of a valid flow.
 export const validateOnestLogs = async (payload: any, domain: string, flow: string) => {
   try {
     const msgIdSet = new Set<string>()
@@ -17,25 +16,30 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
     let logReport: any = {}
 
     function processApiFlow(payload: any, flow: string, logReport: any, msgIdSet: Set<string>) {
-      if (!_.isEmpty(flowOrder(flow))) {
-        const apiSequence = flowOrder(flow)
-        console.log(apiSequence, "apiSequence")
-        apiSequence.forEach((actionCall: any) => {
-          console.log("actionCall", actionCall, payload[actionCall])
-          if (payload[actionCall]) {
-            const response = getResponse(actionCall, payload[actionCall], msgIdSet)
-            if (!_.isEmpty(response)) {
-              logReport = { ...logReport, [actionCall]: response }
-            }
-          } else {
-            logReport = { ...logReport, [actionCall]: `Missing required data of : ${actionCall}` }
-          }
-        })
-        logger.info(logReport, 'Report Generated Successfully!!')
-        return logReport
-      } else {
-        return { invalidFlow: 'Provided flow is invalid' }
-      }
+
+      // Checking if the flow is a valid flow.
+      // flowOrder returns the array of action suquences based on the flow. Returns empty array if the flow doesn't exist.
+      const apiSequence = flowOrder(flow)
+      logger.info(`API Sequence of Flow ${flow} for Onest : [${apiSequence}]`)
+
+      apiSequence.forEach((actionCall: any) => {
+        // Checking if payload is not present
+        if (!payload[actionCall]) {
+          payload[actionCall] = null;
+          logReport = { ...logReport, [actionCall]: `Missing required data of : ${actionCall}` }
+          return;
+        }
+        // response contains the errors in the payload.
+        const response = getResponse(actionCall, payload[actionCall], msgIdSet)
+
+        if (!_.isEmpty(response)) {
+          logReport = { ...logReport, [actionCall]: response }
+        }
+      })
+      
+      // logger.info(logReport, 'Report Generated Successfully!!')
+      return logReport
+
     }
 
     const getResponse = (actionCall: any, data: any, msgIdSet: any) => {
@@ -78,7 +82,6 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
           return null
       }
     }
-    logger.info(`${flow}`)
     switch (flow) {
       case onestFlows.flowOne:
         logReport = processApiFlow(payload, onestFlows.flowOne, logReport, msgIdSet)
@@ -90,9 +93,9 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
         logReport = processApiFlow(payload, onestFlows.flowThree, logReport, msgIdSet)
         break
       default:
+        logger.info(`Invalid Flow for ONEST : ${flow}`)
         return { invalidFlow: 'Provided flow is invalid' }
     }
-
     return logReport
   } catch (error: any) {
     logger.error(error.message)

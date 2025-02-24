@@ -1,6 +1,7 @@
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
-import { checkContext, isObjectEmpty, validateOnestSchema } from '../../index'
+import {  isObjectEmpty, validateOnestSchema } from '../../index'
+import { checkOnestContext } from '../common'
 import { getValue, setValue } from '../../../shared/dao'
 import _ from 'lodash'
 
@@ -10,8 +11,9 @@ export function checkSearch(data: any, msgIdSet: any) {
     logger.info(`Checking JSON structure and required fields for ${actions.SEARCH} API`)
 
     if (!data || isObjectEmpty(data)) {
+      console.log("Search Is Empty");
       errorObj[actions.SEARCH] = 'JSON cannot be empty'
-      return
+      return errorObj
     }
 
     if (!data.message || !data.context || isObjectEmpty(data.message)) {
@@ -20,8 +22,8 @@ export function checkSearch(data: any, msgIdSet: any) {
     }
 
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.SEARCH, data)
-
-    if (schemaValidation !== 'error') {
+    console.log( "From Search" ,schemaValidation);
+    if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
 
@@ -39,7 +41,7 @@ export function checkSearch(data: any, msgIdSet: any) {
 
     try {
       logger.info(`Checking for context in /context for ${actions.SEARCH} API`)
-      const contextRes: any = checkContext(data.context, actions.SEARCH)
+      const contextRes: any = checkOnestContext(data.context, actions.SEARCH)
       setValue(`${actions.SEARCH}_context`, data.context)
 
       if (!contextRes?.valid) {

@@ -17,7 +17,7 @@ export const actions = {
   ON_UPDATE: 'on_update',
   ON_UPDATE_UNSOLICITED: 'on_update_unsolicited'
 }
-
+export const ONEST_CONTEXT_TTL = 'PT30S';
 // This will store all the error reason codes for ONEST.
 export const reasonCodes = {}
 
@@ -32,7 +32,12 @@ export const onestFlows = {
 export function flowOrder(flow: string): string[] {
   switch (flow) {
     case onestFlows.flowOne:
-      return [actions.SEARCH, actions.ON_SEARCH, actions.SEARCH_INC, actions.ON_SEARCH_INC]
+      return [
+        actions.SEARCH, 
+        actions.ON_SEARCH, 
+        actions.SEARCH_INC, 
+        actions.ON_SEARCH_INC
+      ]
     case onestFlows.flowTwo:
       return [
         actions.SEARCH,

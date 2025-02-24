@@ -22,7 +22,7 @@ export function checkOnSearch(data: any, _msgIdSet: any) {
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.ON_SEARCH] = 'JSON cannot be empty'
-      return
+      return errorObj
     }
 
     const { message, context } = data

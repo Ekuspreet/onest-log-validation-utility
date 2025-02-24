@@ -239,7 +239,7 @@ export const validateOnestSchema = (domain: string, api: string, data: any) => {
       }
 
       return errObj
-    } else return 'error'
+    } else return 'success'
   } catch (e: any) {
     logger.error(`Some error occured while validating schema, ${e.stack}`)
   }
