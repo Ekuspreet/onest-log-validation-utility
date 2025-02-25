@@ -1,8 +1,8 @@
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
-import {  isObjectEmpty, validateOnestSchema } from '../../index'
+import { isObjectEmpty, validateOnestSchema } from '../../index'
 import { checkOnestContext } from '../common'
-import { getValue, setValue } from '../../../shared/dao'
+// import { setValue } from '../../../shared/dao'
 import _ from 'lodash'
 
 export function checkSearch(data: any, msgIdSet: any) {
@@ -12,45 +12,43 @@ export function checkSearch(data: any, msgIdSet: any) {
 
     if (!data || isObjectEmpty(data)) {
       console.log("Search Is Empty");
-      errorObj[actions.SEARCH] = 'JSON cannot be empty'
-      return errorObj
+      return { missing_data: 'JSON cannot be empty' }
     }
 
     if (!data.message || !data.context || isObjectEmpty(data.message)) {
-      errorObj['missingFields'] = '/context, /message is missing or empty'
+      errorObj['missing_feilds'] = '/context, /message is missing or empty'
       return Object.keys(errorObj).length > 0 && errorObj
     }
 
+    const skipErrors = [
+      "missing_context",
+      "domain_missing",
+      "version_missing",
+      "transaction_id_missing",
+      "message_id_missing",
+      "action_missing",
+      "bap_uri_missing",
+      "bap_id_missing",
+      "transaction_id_error",
+      "transaction_id_mismatch_error",
+      "message_id_mismatch_error",
+      "invalid_action_error",
+      "ttl_mismatch_error"
+    ];
+    
+    const contextRes: any = checkOnestContext(data.context, actions.SEARCH, msgIdSet)
+    if(!contextRes.isValid) {
+      Object.assign(errorObj, contextRes.errors)
+      if ( contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+        return errorObj;
+      }
+    }
+
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.SEARCH, data)
-    console.log( "From Search" ,schemaValidation);
+    console.log("From Search", schemaValidation);
     if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
-
-    try {
-      logger.info(`Adding Message Id /${actions.SEARCH}`)
-      msgIdSet.add(data.context.message_id)
-      setValue(`${actions.SEARCH}_msgId`, data.context.message_id)
-    } catch (error: any) {
-      logger.error(`!!Error while checking message id for /${actions.SEARCH}, ${error.stack}`)
-    }
-
-    if (!_.isEqual(data.context.domain.split(':')[1], getValue(`domain`))) {
-      errorObj[`Domain[${data.context.action}]`] = `Domain should be same in each action`
-    }
-
-    try {
-      logger.info(`Checking for context in /context for ${actions.SEARCH} API`)
-      const contextRes: any = checkOnestContext(data.context, actions.SEARCH, msgIdSet)
-      setValue(`${actions.SEARCH}_context`, data.context)
-
-      if (!contextRes?.valid) {
-        Object.assign(errorObj, contextRes.ERRORS)
-      }
-    } catch (error: any) {
-      logger.error(`Error in checking context for ${actions.SEARCH}: ${error.stack}`)
-    }
-
     return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {
     logger.error(`Error while checking for JSON structure and required fields for ${actions.SEARCH}: ${error.stack}`)

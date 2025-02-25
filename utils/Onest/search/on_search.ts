@@ -14,8 +14,9 @@ import {
 } from '../..'
 import { getValue, setValue } from '../../../shared/dao'
 import _ from 'lodash'
+import { checkOnestContext } from '../common'
 
-export function checkOnSearch(data: any, _msgIdSet: any) {
+export function checkOnSearch(data: any, msgIdSet: any) {
   try {
     let errorObj: any = {}
     logger.info(`Checking JSON structure and required fields for ${actions.ON_SEARCH} API`)
@@ -30,6 +31,11 @@ export function checkOnSearch(data: any, _msgIdSet: any) {
     if (!message || !context || !message.catalog || isObjectEmpty(message) || isObjectEmpty(message.catalog)) {
       return { missingFields: '/context, /message, /catalog or /message/catalog is missing or empty' }
     }
+
+    logger.info(`Checking for context in /context for ${actions.ON_SEARCH} API`)
+    const contextRes: any = checkOnestContext(data.context, actions.ON_SEARCH, msgIdSet)
+    console.log("Context Errors",contextRes)
+    return
 
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_SEARCH, data)
 
