@@ -1,7 +1,7 @@
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../../index'
-import { checkOnestContext } from '../common'
+import { checkOnestContext, skipErrors } from '../common'
 // import { setValue } from '../../../shared/dao'
 import _ from 'lodash'
 
@@ -19,22 +19,6 @@ export function checkSearch(data: any, msgIdSet: any) {
       errorObj['missing_feilds'] = '/context, /message is missing or empty'
       return Object.keys(errorObj).length > 0 && errorObj
     }
-
-    const skipErrors = [
-      "missing_context",
-      "domain_missing",
-      "version_missing",
-      "transaction_id_missing",
-      "message_id_missing",
-      "action_missing",
-      "bap_uri_missing",
-      "bap_id_missing",
-      "transaction_id_error",
-      "transaction_id_mismatch_error",
-      "message_id_mismatch_error",
-      "invalid_action_error",
-      "ttl_mismatch_error"
-    ];
     
     const contextRes: any = checkOnestContext(data.context, actions.SEARCH, msgIdSet)
     if(!contextRes.isValid) {

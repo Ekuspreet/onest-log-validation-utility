@@ -2,7 +2,7 @@ import { ApiSequence } from '../../../constants'
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../../../utils'
-import { checkOnestContext } from '../common'
+import { checkOnestContext, skipErrors } from '../common'
 
 export function checkOnSearchIncremental(data: any, msgIdSet: any) {
   const errorObj: any = {}
@@ -19,14 +19,18 @@ export function checkOnSearchIncremental(data: any, msgIdSet: any) {
       return Object.keys(errorObj).length > 0 && errorObj
     }
 
+    const contextRes: any = checkOnestContext(data.context, actions.ON_SEARCH_INC, msgIdSet)
+       if(!contextRes.isValid) {
+         Object.assign(errorObj, contextRes.errors)
+         if ( contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+           return errorObj;
+         }
+       }
+ 
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_SEARCH_INC, data)
 
-      logger.info(`Checking for context in /context for ${actions.ON_SEARCH_INC} API`)
-            const contextRes: any = checkOnestContext(data.context, actions.ON_SEARCH_INC, msgIdSet)
-            console.log("Context Errors",contextRes)
-            return
 
-    if (schemaValidation !== 'error') {
+    if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
 

@@ -1,7 +1,7 @@
 import { onestFlows, flowOrder, actions } from '../constants/onest'
 import _ from 'lodash'
 import { logger } from './logger'
-import { setValue } from './dao'
+import { dropDB, setValue } from './dao'
 import * as Onest from '../utils/Onest'
 
 export const validateOnestLogs = async (payload: any, domain: string, flow: string, version: string) => {
@@ -14,6 +14,13 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
     setValue('flow', flow)
     setValue('domain', domain.split(':')[1])
     setValue('version', version)
+
+     try {
+        dropDB()
+      } catch (error) {
+        logger.error('!!Error while removing LMDB', error)
+      }
+
     let logReport: any = {}
 
     function processApiFlow(payload: any, flow: string, logReport: any, msgIdSet: Set<string>) {
