@@ -47,6 +47,7 @@ export const onestSearchIncSchema = {
 							properties: {
 								code: {
 									type: "string",
+									const: "*"
 								},
 							},
 							required: ["code"],

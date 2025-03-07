@@ -263,6 +263,7 @@ export const onestInitSchema = {
                           },
                           email: {
                             type: 'string',
+                            format: 'email'
                           },
                         },
                         required: ['phone', 'email'],

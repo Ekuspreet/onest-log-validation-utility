@@ -51,7 +51,6 @@ export function flowOrder(flow: string): string[] {
         actions.ON_CONFIRM,
         actions.STATUS,
         actions.ON_STATUS,
-        // actions.ON_STATUS,
         actions.ON_UPDATE_UNSOLICITED,
         actions.UPDATE,
         actions.ON_UPDATE,

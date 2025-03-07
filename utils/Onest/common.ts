@@ -2,6 +2,10 @@ import { actions, ONEST_CONTEXT_TTL } from "../../constants/onest";
 import _ from "lodash";
 import { getValue, setValue } from "../../shared/dao";
 
+export function setDifference(a: Set<any>, b: Set<any>): Array<any> {
+  return [...a].filter((value) => !b.has(value));
+}
+// setDifference(new Set(['a','b','c']) , new Set(['b','c']))
 // Message ID Map
 const messageIdMap = {
   [actions.ON_SEARCH]: actions.SEARCH,
@@ -98,7 +102,6 @@ export const checkOnestContext = (
       setValue("transaction_id", context.transaction_id);      
     }
   }else{
-    console.log(`Transaction Id ${getValue("transaction_id")}`)
     if (getValue("transaction_id") === undefined) {
       validationResult.errors.transaction_id_error = "Transaction ID was missing in SEARCH and is required for subsequent calls.";
       return validationResult;
@@ -168,8 +171,6 @@ export const checkOnestContext = (
   }
 
   validationResult.isValid = _.isEmpty(validationResult.errors);
-  console.log(`For ${action} : `);
-  console.dir(validationResult, { depth: null });
   return validationResult;
 
 };

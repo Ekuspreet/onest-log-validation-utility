@@ -1,4 +1,3 @@
-import { ApiSequence } from '../../../constants'
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
@@ -7,7 +6,7 @@ import { checkOnestContext, skipErrors } from '../common'
 export function checkSearchIncremental(data: any, msgIdSet: any) {
   const errorObj: any = {}
   try {
-    logger.info(`Checking JSON structure and required fields for ${ApiSequence.INC_SEARCH} API`)
+    
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.SEARCH_INC] = 'JSON cannot be empty'

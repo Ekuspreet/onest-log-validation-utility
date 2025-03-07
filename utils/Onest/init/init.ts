@@ -1,12 +1,14 @@
-import { ApiSequence } from '../../../constants'
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
+import { checkOnestContext, skipErrors } from '../common'
+import _ from 'lodash'
+import { setValue, getValue } from '../../../shared/dao'
 
-export function checkInit(data: any) {
+export function checkInit(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
-    logger.info(`Checking JSON structure and required fields for ${ApiSequence.INIT} API`)
+    
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.INIT] = 'JSON cannot be empty'
@@ -17,52 +19,53 @@ export function checkInit(data: any) {
       errorObj['missingFields'] = '/context, /message is missing or empty'
       return Object.keys(errorObj).length > 0 && errorObj
     }
-
+    const contextRes: any = checkOnestContext(data.context, actions.ON_SEARCH_INC, msgIdSet)
+    if (!contextRes.isValid) {
+      Object.assign(errorObj, contextRes.errors)
+      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+        return errorObj;
+      }
+    }
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.INIT, data)
 
-    if (schemaValidation !== 'error') {
+    if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
 
-    // try {
-    //   logger.info(`Adding Message Id /${constants.SEARCH}`)
-    //   msgIdSet.add(data.context.message_id)
-    //   setValue(`${ApiSequence.SEARCH}_msgId`, data.context.message_id)
-    // } catch (error: any) {
-    //   logger.error(`!!Error while checking message id for /${constants.SEARCH}, ${error.stack}`)
-    // }
+    try {
+      logger.info(`Adding Message Id /${actions.SEARCH}`)
+      msgIdSet.add(data.context.message_id)
+      setValue(`${actions.SEARCH}_msgId`, data.context.message_id)
+    } catch (error: any) {
+      logger.error(`!!Error while checking message id for /${actions.SEARCH}, ${error.stack}`)
+    }
 
-    // if (!_.isEqual(data.context.domain.split(':')[1], getValue(`domain`))) {
-    //   errorObj[`Domain[${data.context.action}]`] = `Domain should be same in each action`
-    // }
+    if (!_.isEqual(data.context.domain.split(':')[1], getValue(`domain`))) {
+      errorObj[`Domain[${data.context.action}]`] = `Domain should be same in each action`
+    }
 
-    // try {
-    //   logger.info(`Checking for context in /context for ${constants.SEARCH} API`)
-    //   const contextRes: any = checkContext(data.context, constants.SEARCH)
-    //   setValue(`${ApiSequence.SEARCH}_context`, data.context)
+    try {
+      logger.info(`Checking for context in /context for ${actions.SEARCH} API`)
 
-    //   if (!contextRes?.valid) {
-    //     Object.assign(errorObj, contextRes.ERRORS)
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking context for ${ApiSequence.SEARCH}: ${error.stack}`)
-    // }
+    } catch (error: any) {
+      logger.error(`Error in checking context for ${actions.SEARCH}: ${error.stack}`)
+    }
 
-    // try {
-    //   logger.info(`Checking for buyer app finder fee amount for ${ApiSequence.SEARCH}`)
-    //   const buyerFF = parseFloat(data.message.intent?.payment?.['@ondc/org/buyer_app_finder_fee_amount'])
+    try {
+      logger.info(`Checking for buyer app finder fee amount for ${actions.SEARCH}`)
+      const buyerFF = parseFloat(data.message.intent?.payment?.['@ondc/org/buyer_app_finder_fee_amount'])
 
-    //   if (!isNaN(buyerFF)) {
-    //     setValue(`${ApiSequence.SEARCH}_buyerFF`, buyerFF)
-    //   } else {
-    //     errorObj['payment'] = 'payment should have a key @ondc/org/buyer_app_finder_fee_amount'
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking buyer app finder fee amount: ${error.stack}`)
-    // }
+      if (!isNaN(buyerFF)) {
+        setValue(`${actions.SEARCH}_buyerFF`, buyerFF)
+      } else {
+        errorObj['payment'] = 'payment should have a key @ondc/org/buyer_app_finder_fee_amount'
+      }
+    } catch (error: any) {
+      logger.error(`Error in checking buyer app finder fee amount: ${error.stack}`)
+    }
 
     // try {
-    //   logger.info(`Checking for fulfillment/end/location/gps for ${ApiSequence.SEARCH}`)
+    //   logger.info(`Checking for fulfillment/end/location/gps for ${actions.SEARCH}`)
     //   const fulfillment = data.message.intent && data.message.intent?.fulfillment
     //   if (fulfillment && fulfillment.end) {
     //     const gps = fulfillment.end?.location?.gps
@@ -80,7 +83,7 @@ export function checkInit(data: any) {
     // }
 
     // try {
-    //   logger.info(`Checking for item and category in /message/intent for ${constants.SEARCH} API`)
+    //   logger.info(`Checking for item and category in /message/intent for ${actions.SEARCH} API`)
     //   if (hasProperty(data.message.intent, 'item') && hasProperty(data.message.intent, 'category')) {
     //     if (!errorObj.intent) {
     //       errorObj.intent = {}
@@ -92,9 +95,9 @@ export function checkInit(data: any) {
     // }
 
     // try {
-    //   logger.info(`Checking for tags in /message/intent for ${constants.SEARCH} API`)
+    //   logger.info(`Checking for tags in /message/intent for ${actions.SEARCH} API`)
     //   if (data.message.intent?.tags) {
-    //     const tagErrors = checkTagConditions(data.message, data.context, ApiSequence.SEARCH)
+    //     const tagErrors = checkTagConditions(data.message, data.context, actions.SEARCH)
     //     tagErrors?.length ? (errorObj.intent = { ...errorObj.intent, tags: tagErrors }) : null
     //   }
     // } catch (error: any) {

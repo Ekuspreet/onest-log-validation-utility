@@ -1,12 +1,13 @@
-import { ApiSequence } from '../../../constants'
+
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
+import { checkOnestContext, skipErrors } from '../common'
 
-export function checkOnInit(data: any) {
+export function checkOnInit(data: any, msgIdSet: Set<string>, _actionCall: string) {
   const errorObj: any = {}
   try {
-    logger.info(`Checking JSON structure and required fields for ${ApiSequence.ON_INIT} API`)
+    
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.ON_INIT] = 'JSON cannot be empty'
@@ -17,10 +18,16 @@ export function checkOnInit(data: any) {
       errorObj['missingFields'] = '/context, /message is missing or empty'
       return Object.keys(errorObj).length > 0 && errorObj
     }
-
+    const contextRes: any = checkOnestContext(data.context, actions.ON_SEARCH_INC, msgIdSet)
+    if (!contextRes.isValid) {
+      Object.assign(errorObj, contextRes.errors)
+      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+        return errorObj;
+      }
+    }
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_INIT, data)
 
-    if (schemaValidation !== 'error') {
+    if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
 

@@ -1,14 +1,14 @@
+import { setValue } from '../../../shared/dao'
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../../index'
 import { checkOnestContext, skipErrors } from '../common'
-// import { setValue } from '../../../shared/dao'
 import _ from 'lodash'
 
 export function checkSearch(data: any, msgIdSet: any) {
   const errorObj: any = {}
   try {
-    logger.info(`Checking JSON structure and required fields for ${actions.SEARCH} API`)
+    
 
     if (!data || isObjectEmpty(data)) {
       console.log("Search Is Empty");
@@ -29,10 +29,10 @@ export function checkSearch(data: any, msgIdSet: any) {
     }
 
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.SEARCH, data)
-    console.log("From Search", schemaValidation);
     if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
+    setValue(`${actions.SEARCH}`, data)
     return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {
     logger.error(`Error while checking for JSON structure and required fields for ${actions.SEARCH}: ${error.stack}`)

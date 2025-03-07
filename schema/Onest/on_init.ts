@@ -260,6 +260,7 @@ export const onestOnInitSchema = {
                           },
                           email: {
                             type: 'string',
+                            format: 'email'
                           },
                         },
                         required: ['phone', 'email'],

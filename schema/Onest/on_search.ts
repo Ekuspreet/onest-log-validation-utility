@@ -322,7 +322,7 @@ export const onestOnSearchSchema = {
                               type: 'object',
                               properties: {
                                 phone: { type: 'string' },
-                                email: { type: 'string' },
+                                email: { type: 'string', format: 'email' },
                               },
                               required: ['phone', 'email'],
                             },

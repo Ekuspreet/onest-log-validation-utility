@@ -1,12 +1,13 @@
-import { ApiSequence } from '../../../constants'
+
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
+import { checkOnestContext, skipErrors } from '../common'
 
-export function checkConfirm(data: any) {
+export function checkConfirm(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
-    logger.info(`Checking JSON structure and required fields for ${ApiSequence.CONFIRM} API`)
+    
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.CONFIRM] = 'JSON cannot be empty'
@@ -18,9 +19,17 @@ export function checkConfirm(data: any) {
       return Object.keys(errorObj).length > 0 && errorObj
     }
 
+    const contextRes: any = checkOnestContext(data.context, actions.SEARCH_INC, msgIdSet)
+    if(!contextRes.isValid) {
+      Object.assign(errorObj, contextRes.errors)
+      if ( contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+        return errorObj;
+      }
+    }
+
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.CONFIRM, data)
 
-    if (schemaValidation !== 'error') {
+    if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
 

@@ -281,6 +281,7 @@ export const onestConfirmSchema = {
 													},
 													email: {
 														type: "string",
+														format: 'email'
 													},
 												},
 												required: ["phone", "email"],

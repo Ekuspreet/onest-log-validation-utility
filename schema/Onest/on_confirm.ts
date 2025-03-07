@@ -262,6 +262,7 @@ export const onestOnConfirmSchema = {
                           },
                           email: {
                             type: 'string',
+                            format: 'email'
                           },
                         },
                         required: ['phone', 'email'],

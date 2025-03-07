@@ -28,7 +28,6 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
       // flowOrder returns the array of action suquences based on the flow. Returns empty array if the flow doesn't exist.
       const apiSequence = flowOrder(flow)
       logger.info(`API Sequence of Flow ${flow} for Onest : [${apiSequence}]`)
-
       apiSequence.forEach((actionCall: any) => {
         // Checking if payload is not present
         if (!payload[actionCall]) {
@@ -37,7 +36,7 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
           return;
         }
         // response contains the errors in the payload.
-        const response = getResponse(actionCall, payload[actionCall], msgIdSet)
+        const response = getResponse(actionCall, payload[actionCall], msgIdSet, flow)
 
         if (!_.isEmpty(response)) {
           logReport = { ...logReport, [actionCall]: response }
@@ -49,7 +48,7 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
 
     }
 
-    const getResponse = (actionCall: any, data: any, msgIdSet: any) => {
+    const getResponse = (actionCall: any, data: any, msgIdSet: any, flow: string) => {
       switch (actionCall) {
         case actions.SEARCH:
           return Onest.checkSearch(data, msgIdSet)
@@ -60,31 +59,31 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
         case actions.ON_SEARCH_INC:
           return Onest.checkOnSearchIncremental(data, msgIdSet)
         case actions.SELECT:
-          return Onest.checkSelect(data)
+          return Onest.checkSelect(data, msgIdSet)
         case actions.ON_SELECT:
-          return Onest.checkOnSelect(data)
+          return Onest.checkOnSelect(data, msgIdSet)
         case actions.INIT:
-          return Onest.checkInit(data)
+          return Onest.checkInit(data, msgIdSet)
         case actions.ON_INIT:
         case actions.ON_INIT_XINPUT:
-          return Onest.checkOnInit(data)
+          return Onest.checkOnInit(data, msgIdSet, actionCall)
         case actions.CONFIRM:
-          return Onest.checkConfirm(data)
+          return Onest.checkConfirm(data, msgIdSet)
         case actions.ON_CONFIRM:
-          return Onest.checkOnConfirm(data)
+          return Onest.checkOnConfirm(data, msgIdSet)
         // case actions.CANCEL:
-        //   return checkCancel(data, )
+        //   return checkCancel(data, msgIdSet, flow, )
         // case actions.ON_CANCEL:
-        //   return checkOnCancel(data,)
+        //   return checkOnCancel(data, msgIdSet, flow,)
         case actions.STATUS:
-          return Onest.checkStatus(data)
+          return Onest.checkStatus(data, msgIdSet, flow)
         case actions.ON_STATUS:
-          return Onest.checkOnStatus(data)
+          return Onest.checkOnStatus(data, msgIdSet, flow)
         case actions.UPDATE:
-          return Onest.checkUpdate(data)
+          return Onest.checkUpdate(data, msgIdSet)
         case actions.ON_UPDATE:
         case actions.ON_UPDATE_UNSOLICITED:
-          return Onest.checkOnUpdate(data)
+          return Onest.checkOnUpdate(data, msgIdSet, actionCall)
         default:
           return null
       }
