@@ -1,5 +1,5 @@
 import { actions } from '../../../constants/onest'
- import { logger } from '../../../shared/logger'
+import { logger } from '../../../shared/logger'
 import {
   // areTimestampsLessThanOrEqualTo,
   compareSTDwithArea,
@@ -15,7 +15,7 @@ import { checkOnestContext, setDifference, skipErrors } from '../common'
 export function checkOnSearch(data: any, msgIdSet: any) {
   try {
     let errorObj: any = {}
-    
+
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.ON_SEARCH] = 'JSON cannot be empty'
@@ -32,7 +32,7 @@ export function checkOnSearch(data: any, msgIdSet: any) {
     if (!contextRes.isValid) {
       Object.assign(errorObj, contextRes.errors)
       if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
-        return errorObj;
+        return Object.keys(errorObj).length > 0 && errorObj;
       }
     }
 
@@ -44,15 +44,6 @@ export function checkOnSearch(data: any, msgIdSet: any) {
     // Storing the payload for future refrences.
     setValue(`${actions.ON_SEARCH}`, data)
 
-
-    // const onSearchCatalog: any = message.catalog
-    // const onSearchFFIdsArray: any = []
-    // const prvdrLocId = new Set()
-    // const itemsId = new Set()
-    // const onSearchFFTypeSet = new Set()
-    // const itemsArray: any = []
-    // let itemIdList: any = []
-
     const providerIds = new Set()
 
     try {
@@ -63,9 +54,9 @@ export function checkOnSearch(data: any, msgIdSet: any) {
         // Following information is being collected about each provider.
         const selectedFulfillmentIds = new Set();
         const selectedLocationIds = new Set();
-        const fulfillmentIds = new Set();
-        const locationIds = new Set();
         const itemIds = new Set();
+        const fulfillmentIds = new Set();
+        const locationIds = new Set();           
         const items = new Set();
 
         // Unique provider id's
@@ -79,7 +70,6 @@ export function checkOnSearch(data: any, msgIdSet: any) {
         // Check fulfillment ID uniqueness
         provider.fulfillments.forEach((fulfillment: any, fIndex: number) => {
           if (fulfillmentIds.has(fulfillment.id)) {
-            console.log("DUPLICATE HAPPENED");
             errorObj[`fulfillment_id_duplicate_error_${index}_${fIndex}`] =
               `Duplicate fulfillment ID found: ${fulfillment.id} in provider ${provider.id}`;
           }
@@ -97,53 +87,63 @@ export function checkOnSearch(data: any, msgIdSet: any) {
           }
         });
 
-        
+
         // check if Std code matches with the area_code.
         provider.locations.forEach((location: any, j: number) => {
           if (location) {
             const area_code = Number.parseInt(location?.area_code?.code)
             const std = location?.city?.code.split(':')[1]
-            if(std && area_code){
+            if (std && area_code) {
               const areaWithSTD = compareSTDwithArea(area_code, std)
-            if (!areaWithSTD) {
-              logger.error(`STD code does not match with given area_code on /${actions.ON_SEARCH}`)
-              errorObj[`invldAreaCode${index}${j}`] =
-              `STD code does not match with given area_code on /${actions.ON_SEARCH}/ for provider ${provider.id}`
+              if (!areaWithSTD) {
+                logger.error(`STD code does not match with given area_code on /${actions.ON_SEARCH}`)
+                errorObj[`invldAreaCode${index}${j}`] =
+                  `STD code does not match with given area_code on /${actions.ON_SEARCH}/ for provider ${provider.id}`
+              }
             }
-          }
           }
         });
-        
-        
+
+
         provider.items.forEach((item: any, k: number) => {
           if (item) {
-              // Check item ID uniqueness
+            const selectedFulfillmentsPerId = new Set();
+            const selectedLocationsPerId = new Set();
+            // Check item ID uniqueness
             if (itemIds.has(item.id)) {
-                  errorObj[`item_id_duplicate_error_${index}_${k}`] = 
-                      `Duplicate item ID found: ${item.id} in provider ${provider.id}`;
+              errorObj[`item_id_duplicate_error_${index}_${k}`] =
+                `Duplicate item ID found: ${item.id} in provider ${provider.id}`;
+            }
+            itemIds.add(item.id);
+            items.add(item)
+            // Ensure item location_ids exist in provider.locations
+            item.location_ids.forEach((locationId: string) => {
+              if (!locationIds.has(locationId)) {
+                errorObj[`item_location_mapping_error_${index}_${k}`] =
+                  `Item location ID ${locationId} is not found in provider ${provider.id}'s locations`;
+              } else {
+                selectedLocationIds.add(locationId);
+                selectedLocationsPerId.add(locationId);
+
               }
-              itemIds.add(item.id);
-              items.add(item)
-              // Ensure item location_ids exist in provider.locations
-              item.location_ids.forEach((locationId: string) => {
-                if (!locationIds.has(locationId)) {
-                    errorObj[`item_location_mapping_error_${index}_${k}`] =
-                        `Item location ID ${locationId} is not found in provider ${provider.id}'s locations`;
-                }else{
-                  selectedLocationIds.add(locationId);
-                }
-              });
+            });
 
             // Ensure item fulfillment_ids exist in provider.fulfillments
-              item.fulfillment_ids.forEach((fulfillmentId: string) => {
-                  if (!fulfillmentIds.has(fulfillmentId)) {
-                      errorObj[`item_fulfillment_mapping_error_${index}_${k}`] =
-                          `Item fulfillment ID ${fulfillmentId} is not found in provider ${provider.id}'s fulfillments`;
-                  }else{
-                    selectedFulfillmentIds.add(fulfillmentId);
-                  }
-              });     
-            }
+            item.fulfillment_ids.forEach((fulfillmentId: string) => {
+              if (!fulfillmentIds.has(fulfillmentId)) {
+                errorObj[`item_fulfillment_mapping_error_${index}_${k}`] =
+                  `Item fulfillment ID ${fulfillmentId} is not found in provider ${provider.id}'s fulfillments`;
+              } else {
+                selectedFulfillmentIds.add(fulfillmentId);
+                selectedFulfillmentsPerId.add(fulfillmentId);
+              }
+            });
+          
+            // Storing Item Information.
+            setValue(`${actions.ON_SEARCH}_${provider.id}_${item.id}_fulfillments`, selectedFulfillmentsPerId)
+            setValue(`${actions.ON_SEARCH}_${provider.id}_${item.id}_locations`, selectedLocationsPerId)
+
+          }
         });
 
         // Information Retained For Future Calls.
@@ -156,19 +156,19 @@ export function checkOnSearch(data: any, msgIdSet: any) {
         const unSelectedFulfillments = setDifference(fulfillmentIds, selectedFulfillmentIds)
         const unSelectedLocations = setDifference(locationIds, selectedLocationIds)
         if (!_.isEmpty(unSelectedFulfillments)) {
-          errorObj[`unused_fulfillment_id_error_${index}`] = 
+          errorObj[`unused_fulfillment_id_error_${index}`] =
             `Unused fulfillment IDs found in provider ${provider.id}: ${unSelectedFulfillments.join(", ")}`;
         }
 
-        
+
         // Ensuring that no obsolete locations remain.
         if (!_.isEmpty(unSelectedLocations)) {
-          errorObj[`unused_location_id_error_${index}`] = 
+          errorObj[`unused_location_id_error_${index}`] =
             `Unused location IDs found in provider ${provider.id}: ${unSelectedLocations.join(", ")}`;
         }
       })
-      
-      
+
+
       return Object.keys(errorObj).length > 0 && errorObj
     } catch (error: any) {
       logger.error(`Error while checking for JSON structure and required fields for ${actions.ON_SEARCH}: ${error.stack}`)

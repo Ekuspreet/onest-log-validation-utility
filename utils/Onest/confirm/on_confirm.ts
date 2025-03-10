@@ -18,7 +18,7 @@ export function checkOnConfirm(data: any, msgIdSet: Set<string>) {
       errorObj['missingFields'] = '/context, /message is missing or empty'
       return Object.keys(errorObj).length > 0 && errorObj
     }
-    const contextRes: any = checkOnestContext(data.context, actions.SEARCH_INC, msgIdSet)
+    const contextRes: any = checkOnestContext(data.context, actions.INIT, msgIdSet)
        if(!contextRes.isValid) {
          Object.assign(errorObj, contextRes.errors)
          if ( contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {

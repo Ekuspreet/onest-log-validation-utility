@@ -29,7 +29,7 @@ export function checkOnSearchIncremental(data: any, msgIdSet: any) {
     if (!contextRes.isValid) {
       Object.assign(errorObj, contextRes.errors)
       if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
-        return errorObj;
+        return Object.keys(errorObj).length > 0 && errorObj;
       }
     }
 

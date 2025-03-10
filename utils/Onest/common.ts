@@ -152,17 +152,6 @@ export const checkOnestContext = (
     validationResult.errors.invalid_action_error = `context.action should be ${action}.`;
   }
 
-  // if (!missingFields.has("bap_uri") && !missingFields.has("bap_id")) {
-  //   if (!isIdExistInUri(context.bap_uri, context.bap_id)) {
-  //     validationResult.errors.bap_id_mismatch_error = "BAP URI and ID don't match.";
-  //   }
-  // }
-
-  // if (!missingFields.has("bpp_uri") && !missingFields.has("bpp_id")) {
-  //   if (action !== actions.SEARCH && context.bpp_uri && context.bpp_id && !isIdExistInUri(context.bpp_uri, context.bpp_id)) {
-  //     validationResult.errors.bpp_id_mismatch_error = "BPP URI and ID don't match.";
-  //   }
-  // }
 
   if (!_.startsWith(context.action, "on") && !missingFields.has("ttl")) {
     if (context.ttl !== ONEST_CONTEXT_TTL) {
@@ -174,10 +163,6 @@ export const checkOnestContext = (
   return validationResult;
 
 };
-
-// function isIdExistInUri(uri: string, id: string): boolean {
-//   return uri.includes(id);
-// }
 
 export const skipErrors = [
       "missing_context",
@@ -196,3 +181,8 @@ export const skipErrors = [
       "invalid_action_error",
       "ttl_mismatch_error"
     ];
+
+export const validateQuoteTrail = (action: string,quote: any): void => {
+  console.log(action);
+  console.log(quote);
+}

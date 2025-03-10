@@ -19,7 +19,7 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
       return Object.keys(errorObj).length > 0 && errorObj
     }
 
-    const contextRes: any = checkOnestContext(data.context, actions.SEARCH_INC, msgIdSet)
+    const contextRes: any = checkOnestContext(data.context, actions.CONFIRM, msgIdSet)
     if(!contextRes.isValid) {
       Object.assign(errorObj, contextRes.errors)
       if ( contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
