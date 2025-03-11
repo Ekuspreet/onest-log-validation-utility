@@ -40,31 +40,27 @@ export function checkInit(data: any, msgIdSet: Set<string>) {
     if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
-      // --------------------------------------------------------------------------
-      // Checks that are needed to performed in Init API Body.
-      // Provider.id must be a valid provider id - done
-      // item.id must be a valid item for that provider - done
-      // Fulfillment selected must be present in on_search. - done
-      // tags should match with the selected item. - pending
-      // --------------------------------------------------------------------------
+      
 
     try {
-      const availibleFulfillments = new Set(onSelect.message.order.fulfillments.map((fulfillment: any) => fulfillment.id));
-      const initFulfillments = new Set(init.message.order.fulfillments.map((fulfillment: any) => fulfillment.id))
-      const incorrect = setDifference(availibleFulfillments,initFulfillments)
-      if(!_.isEmpty(incorrect)){
-        errorObj[`incorrect_fulfillments_error`] = `Fulfillments of ${actions.INIT} does not match with selected fulfillments.`;
-
-      }
       // Check provider equality
       if (!_.isEqual(init.message.order.provider, onSelect.message.order.provider)) {
         errorObj[`incorrect_provider_error`] = `Provider ${onSelect.message.order.provider.id} does not match with selected provider.`;
         return Object.keys(errorObj).length > 0 && errorObj;
       }
-
-      if (!_.isEqual(JSON.stringify(onSelect.message.order.items), JSON.stringify(init.message.order.items))){
+      
+      //  item.id must be a valid item for that provider
+      if (!_.isEqual(onSelect.message.order.items, init.message.order.items)){
         errorObj[`incorrect_items_error`] = `Items do not match between ${actions.INIT} and ${actions.ON_SELECT}.`;
         return Object.keys(errorObj).length > 0 && errorObj;
+      }
+      
+      // Fulfillment selected must be present in on_search for that item
+      const availibleFulfillments = new Set(onSelect.message.order.fulfillments.map((fulfillment: any) => fulfillment.id));
+      const initFulfillments = new Set(init.message.order.fulfillments.map((fulfillment: any) => fulfillment.id))
+      const incorrect = setDifference(availibleFulfillments,initFulfillments)
+      if(!_.isEmpty(incorrect)){
+        errorObj[`incorrect_fulfillments_error`] = `Fulfillments of ${actions.INIT} does not match with selected fulfillments.`;
       }
 
       init.message.order.items.forEach((item: any) => {
@@ -75,7 +71,11 @@ export function checkInit(data: any, msgIdSet: Set<string>) {
             }
           })
       });
-
+      if (_.isEmpty(init.message.order.payments)) {
+        errorObj[`payments_missing_error`] =
+          `Payments is necessary for ${actions.INIT} call.`;
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }
       setValue(`${actions.INIT}`, data)
       return Object.keys(errorObj).length > 0 && errorObj
 

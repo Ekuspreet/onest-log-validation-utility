@@ -3,12 +3,20 @@ import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
 import { checkOnestContext, skipErrors } from '../common'
+import { getValue, setValue as _setValue, setValue } from '../../../shared/dao'
+// import { FULFILLMENT_STATE, STATUS } from '../../../schema/Onest/constants'
 
+import _ from 'lodash'
 export function checkConfirm(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
-    
 
+
+    const onInit = getValue(`${actions.ON_INIT_XINPUT}`)
+    if (!onInit) {
+      errorObj.critical_error = `errors need to be resolved in previous calls first.`
+      return Object.keys(errorObj).length > 0 && errorObj;
+    }
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.CONFIRM] = 'JSON cannot be empty'
       return
@@ -20,9 +28,9 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
     }
 
     const contextRes: any = checkOnestContext(data.context, actions.CONFIRM, msgIdSet)
-    if(!contextRes.isValid) {
+    if (!contextRes.isValid) {
       Object.assign(errorObj, contextRes.errors)
-      if ( contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
         return errorObj;
       }
     }
@@ -33,83 +41,79 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
       Object.assign(errorObj, schemaValidation)
     }
 
-    // try {
-    //   logger.info(`Adding Message Id /${constants.SEARCH}`)
-    //   msgIdSet.add(data.context.message_id)
-    //   setValue(`${ApiSequence.SEARCH}_msgId`, data.context.message_id)
-    // } catch (error: any) {
-    //   logger.error(`!!Error while checking message id for /${constants.SEARCH}, ${error.stack}`)
-    // }
+    const confirm = data;
+    try {
 
-    // if (!_.isEqual(data.context.domain.split(':')[1], getValue(`domain`))) {
-    //   errorObj[`Domain[${data.context.action}]`] = `Domain should be same in each action`
-    // }
+      if(_.isEmpty(confirm.message.order.id)){
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }
+      setValue(`order_id`,confirm.message.order.id);
 
-    // try {
-    //   logger.info(`Checking for context in /context for ${constants.SEARCH} API`)
-    //   const contextRes: any = checkContext(data.context, constants.SEARCH)
-    //   setValue(`${ApiSequence.SEARCH}_context`, data.context)
+      // Check provider equality
+      if (!_.isEqual(onInit.message.order.provider, confirm.message.order.provider)) {
+        errorObj[`incorrect_provider_error`] = `Provider ${confirm.message.order.provider.id} does not match with selected provider.`;
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }
 
-    //   if (!contextRes?.valid) {
-    //     Object.assign(errorObj, contextRes.ERRORS)
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking context for ${ApiSequence.SEARCH}: ${error.stack}`)
-    // }
+      // Currently this flag is being used for ITEM.
+      let hasIdMismatch = false;
 
-    // try {
-    //   logger.info(`Checking for buyer app finder fee amount for ${ApiSequence.SEARCH}`)
-    //   const buyerFF = parseFloat(data.message.intent?.payment?.['@ondc/org/buyer_app_finder_fee_amount'])
+      confirm.message.order.items.forEach((item: any) => {
+        //  item.id must be a valid item for that provider
+        const onInitItem = onInit.message.order.items.find((i_item: any) => i_item.id === item.id)
+        if (!onInitItem) {
+          errorObj[`invalid_item_error`] = `Item with id ${item.id} does not exist in items in ${actions.CONFIRM}.`;
+          hasIdMismatch = true;
+          return;
+        }
+        const toMatch = [`fulfillment_ids`, 'tags'];
+        toMatch.forEach((feild: string) => {
+          if (!_.isEqual(item[feild], onInitItem[feild])) {
+            errorObj[`${feild}_mismatch_error_${item.id}`] = `${feild} in ${actions.CONFIRM} for item ${item.id}, do not match with ${actions.ON_INIT}.`;
+          }
+        })
 
-    //   if (!isNaN(buyerFF)) {
-    //     setValue(`${ApiSequence.SEARCH}_buyerFF`, buyerFF)
-    //   } else {
-    //     errorObj['payment'] = 'payment should have a key @ondc/org/buyer_app_finder_fee_amount'
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking buyer app finder fee amount: ${error.stack}`)
-    // }
+      })
 
-    // try {
-    //   logger.info(`Checking for fulfillment/end/location/gps for ${ApiSequence.SEARCH}`)
-    //   const fulfillment = data.message.intent && data.message.intent?.fulfillment
-    //   if (fulfillment && fulfillment.end) {
-    //     const gps = fulfillment.end?.location?.gps
-    //     if (gps) {
-    //       if (!checkGpsPrecision(gps)) {
-    //         errorObj['gpsPrecision'] =
-    //           'fulfillment/end/location/gps coordinates must be specified with at least six decimal places of precision.'
-    //       }
-    //     } else {
-    //       errorObj['fulfillmentLocation'] = 'fulfillment/end/location should have a required property gps'
-    //     }
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking fulfillment/end/location/gps: ${error.stack}`)
-    // }
+      // Checking for the Quote Trail.
+      if (!_.isEqual(confirm.message.order.quote, onInit.message.order.quote)) {
+        errorObj[`quote_mismatch_error`] = `Quote in ${actions.CONFIRM} does not match with quote trail.`;
+      }
 
-    // try {
-    //   logger.info(`Checking for item and category in /message/intent for ${constants.SEARCH} API`)
-    //   if (hasProperty(data.message.intent, 'item') && hasProperty(data.message.intent, 'category')) {
-    //     if (!errorObj.intent) {
-    //       errorObj.intent = {}
-    //     }
-    //     errorObj.intent.category_or_item = '/message/intent cannot have both properties item and category'
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking item and category in /message/intent: ${error.stack}`)
-    // }
+      // Checking for the payments object
 
-    // try {
-    //   logger.info(`Checking for tags in /message/intent for ${constants.SEARCH} API`)
-    //   if (data.message.intent?.tags) {
-    //     const tagErrors = checkTagConditions(data.message, data.context, ApiSequence.SEARCH)
-    //     tagErrors?.length ? (errorObj.intent = { ...errorObj.intent, tags: tagErrors }) : null
-    //   }
-    // } catch (error: any) {
-    //   logger.error(`Error in checking tags in /message/intent: ${error.stack}`)
-    // }
+      onInit.message.order.fulfillments.forEach((fulfillment: any) => {
+        const onInitFulfillment = onInit.message.order.fulfillments.find((oi_fulfillment: any) => oi_fulfillment.id === fulfillment.id)
+        if (!onInitFulfillment) {
+          errorObj[`invalid_fulfillment_error`] = `Fulfillment with id ${fulfillment.id} does not exist in Fulfillments in ${actions.ON_INIT}.`;
+          hasIdMismatch = true;
+          return;
+        }
+        const toMatch = [`type`, `customer.contact`, `customer.person.name`, `customer.person.gender`, `customer.person.age`, `customer.person.skills`, `customer.person.languages`, 'customer.person.creds'];
 
+        toMatch.forEach((field: string) => {
+          if (!_.isEqual(_.get(fulfillment, field), _.get(onInitFulfillment, field))) {
+            errorObj[`${field}_mismatch_error_${fulfillment.id}`] = `${field} in ${actions.CONFIRM} for fulfillment ${fulfillment.id} does not match with ${actions.ON_INIT}.`;
+          }
+
+        });
+        // Payment Object Calculations
+        if(!(fulfillment.state.updated_at === confirm.context.timestamp)){
+          errorObj[`incorrect_updated_timestamp_error`] = `the correct updated_at in ${actions.CONFIRM} should be context.timestamp.`;
+        }
+      });
+      if (hasIdMismatch) {
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }
+    } catch (error: any) {
+      logger.error(`Error while checking for JSON structure and required fields for ${actions.CONFIRM}: ${error.stack}`)
+      return {
+        error: `Error while checking for JSON structure and required fields for ${actions.CONFIRM}: ${error.stack}`,
+      }
+    }
+
+    // console.log(onInit);
+    // const confirm = data;
     return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {
     logger.error(`Error while checking for JSON structure and required fields for ${actions.CONFIRM}: ${error.stack}`)

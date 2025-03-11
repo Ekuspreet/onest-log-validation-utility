@@ -79,17 +79,17 @@ export const checkOnestContext = (
   }
 
   let requiredFields;
-  switch(action) {
-    case  actions.SEARCH:
+  switch (action) {
+    case actions.SEARCH:
       requiredFields = ["domain", "version", "transaction_id", "message_id", "action", "bap_uri", "bap_id"]
       break;
     case actions.ON_SEARCH:
-      requiredFields = ["domain", "version", "transaction_id", "message_id", "action", "bap_uri", "bap_id","bpp_uri","bpp_id"]
+      requiredFields = ["domain", "version", "transaction_id", "message_id", "action", "bap_uri", "bap_id", "bpp_uri", "bpp_id"]
       break;
     default:
-      requiredFields = ["domain", "version", "transaction_id", "message_id", "action", "bap_uri", "bap_id","bpp_uri","bpp_id"]
+      requiredFields = ["domain", "version", "transaction_id", "message_id", "action", "bap_uri", "bap_id", "bpp_uri", "bpp_id"]
       break;
-    }
+  }
   requiredFields.forEach((field) =>
     checkMissingField(field as keyof typeof context, `${_.snakeCase(field)}_missing`)
   );
@@ -97,17 +97,17 @@ export const checkOnestContext = (
 
   // Checks start from here.
 
-  if(action === actions.SEARCH) {
+  if (action === actions.SEARCH) {
     if (!missingFields.has("transaction_id")) {
-      setValue("transaction_id", context.transaction_id);      
+      setValue("transaction_id", context.transaction_id);
     }
-  }else{
+  } else {
     if (getValue("transaction_id") === undefined) {
       validationResult.errors.transaction_id_error = "Transaction ID was missing in SEARCH and is required for subsequent calls.";
       return validationResult;
-    }else{
+    } else {
       if (!missingFields.has("transaction_id")) {
-        if(context.transaction_id !== getValue("transaction_id")){
+        if (context.transaction_id !== getValue("transaction_id")) {
           validationResult.errors.transaction_id_mismatch_error = "Transaction ID does not match or is invalid.";
           return validationResult;
         }
@@ -136,7 +136,10 @@ export const checkOnestContext = (
   setValue("latest_ts", context.timestamp);
 
   if (!missingFields.has("message_id")) {
-    if (!_.startsWith(context.action, "on")) {
+    if (!_.startsWith(context.action, "on") || [
+      actions.ON_INIT_XINPUT, 
+      actions.ON_UPDATE_UNSOLICITED, 
+      actions.ON_STATUS ].includes(context.action)) {
       if (msgIdSet.has(context.message_id)) {
         validationResult.errors.duplicate_message_id_error = "Duplicate Message IDs are not allowed.";
       } else {
@@ -165,24 +168,24 @@ export const checkOnestContext = (
 };
 
 export const skipErrors = [
-      "missing_context",
-      "domain_missing",
-      "version_missing",
-      "transaction_id_missing",
-      "message_id_missing",
-      "action_missing",
-      "bap_uri_missing",
-      "bap_id_missing",
-      "bpp_uri_missing",
-      "bpp_id_missing",
-      "transaction_id_error",
-      "transaction_id_mismatch_error",
-      "message_id_mismatch_error",
-      "invalid_action_error",
-      "ttl_mismatch_error"
-    ];
+  "missing_context",
+  "domain_missing",
+  "version_missing",
+  "transaction_id_missing",
+  "message_id_missing",
+  "action_missing",
+  "bap_uri_missing",
+  "bap_id_missing",
+  "bpp_uri_missing",
+  "bpp_id_missing",
+  "transaction_id_error",
+  "transaction_id_mismatch_error",
+  "message_id_mismatch_error",
+  "invalid_action_error",
+  "ttl_mismatch_error"
+];
 
-export const validateQuoteTrail = (action: string,quote: any): void => {
+export const validateQuoteTrail = (action: string, quote: any): void => {
   console.log(action);
   console.log(quote);
 }
