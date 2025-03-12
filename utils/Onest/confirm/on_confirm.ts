@@ -3,6 +3,10 @@ import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
 import { checkOnestContext, skipErrors } from '../common'
+import { getValue } from '../../../shared/dao'
+import { FULFILLMENT_STATE, STATUS } from '../../../schema/Onest/constants'
+import _ from 'lodash'
+// import { STATUS } from 'schema/Onest/constants'
 
 export function checkOnConfirm(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
@@ -30,6 +34,32 @@ export function checkOnConfirm(data: any, msgIdSet: Set<string>) {
 
     if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
+    }
+    const on_confirm = data;
+    try{
+      // Matching Order Id
+      const order_id = getValue(`order_id`);
+      // const latest_fulfillment = getValue(`latest_fulfillment`);
+      if(_.isEqual(order_id, on_confirm.message.order.id)){
+        errorObj[`invalid_order_id_error`] = `order id provided here is invalid and should match with confirm call.`
+        return Object.keys(errorObj).length > 0 && errorObj
+      }
+      if(on_confirm.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.APPLICATION_FILLED){
+
+        if(!(on_confirm.message.order.status === STATUS.CREATED)){
+           errorObj[`invalid_status_error`] = `Status in ${actions.ON_CONFIRM} must be ${STATUS.CREATED}.`
+        }
+      }
+      if(on_confirm.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.APPLICATION_ACCEPTED){
+        if(!(on_confirm.message.order.status === STATUS.CREATED)){
+           errorObj[`invalid_status_error`] = `Status in ${actions.ON_CONFIRM} must be ${STATUS.CREATED}.`
+        }
+      }
+    } catch(error:any){
+      logger.error(`Error while checking for JSON structure and required fields for ${actions.ON_CONFIRM}: ${error.stack}`)
+      return {
+        error: `Error while checking for JSON structure and required fields for ${actions.ON_CONFIRM}: ${error.stack}`,
+      }
     }
 
     return Object.keys(errorObj).length > 0 && errorObj

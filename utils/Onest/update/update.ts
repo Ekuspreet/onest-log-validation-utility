@@ -3,7 +3,9 @@ import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
 import { checkOnestContext, skipErrors } from '../common'
-
+import { getValue, setValue } from '../../../shared/dao'
+import { FULFILLMENT_STATE, STATUS } from '../../../schema/Onest/constants'
+import _ from 'lodash'
 export function checkUpdate(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
@@ -30,7 +32,21 @@ export function checkUpdate(data: any, msgIdSet: Set<string>) {
     if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
+    const update = data;
+    const order_id = getValue(`order_id`);
+    if(_.isEqual(order_id, update.message.order.id)){
+      errorObj[`invalid_order_id_error`] = `order id provided here is invalid and should match with confirm call.`
+      return Object.keys(errorObj).length > 0 && errorObj
+    }
 
+    if ((update.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.APPLICATION_ACCEPTED) || (update.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.APPLICATION_REJECTED)  ) {
+      if (!(update.message.order.status === STATUS.COMPLETED)) {
+        errorObj[`invalid_status_error`] = `Status in ${actions.UPDATE} for ${FULFILLMENT_STATE.APPLICATION_REJECTED} must be ${STATUS.ACTIVE}.`
+      }
+    }
+
+
+    setValue(`${actions.UPDATE}`, data)
     return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {
     logger.error(`Error while checking for JSON structure and required fields for ${actions.UPDATE}: ${error.stack}`)

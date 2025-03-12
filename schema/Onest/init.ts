@@ -282,7 +282,7 @@ export const onestInitSchema = {
                 properties: {
                   status: {
                     type: 'string',
-                    const: PAYMENTS['status'][0],
+                    enum: PAYMENTS['status'],
                   },
                   type: {
                     type: 'string',

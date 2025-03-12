@@ -4,9 +4,9 @@ import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
 import { checkOnestContext, skipErrors } from '../common'
 import { getValue, setValue as _setValue, setValue } from '../../../shared/dao'
-// import { FULFILLMENT_STATE, STATUS } from '../../../schema/Onest/constants'
-
+import { STATUS } from '../../../schema/Onest/constants'
 import _ from 'lodash'
+
 export function checkConfirm(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
@@ -49,6 +49,9 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
       }
       setValue(`order_id`,confirm.message.order.id);
 
+      if(!(confirm.message.order.status === STATUS.CREATED)){
+        errorObj[`invalid_status_error`] = `Status in ${actions.CONFIRM} must be ${STATUS.CREATED}.`
+     }
       // Check provider equality
       if (!_.isEqual(onInit.message.order.provider, confirm.message.order.provider)) {
         errorObj[`incorrect_provider_error`] = `Provider ${confirm.message.order.provider.id} does not match with selected provider.`;

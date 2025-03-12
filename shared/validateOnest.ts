@@ -78,7 +78,7 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
         case actions.STATUS:
           return Onest.checkStatus(data, msgIdSet, flow)
         case actions.ON_STATUS:
-          return Onest.checkOnStatus(data, msgIdSet, flow)
+          return Onest.checkOnStatus(data, msgIdSet, flow, actionCall)
         case actions.UPDATE:
           return Onest.checkUpdate(data, msgIdSet)
         case actions.ON_UPDATE:

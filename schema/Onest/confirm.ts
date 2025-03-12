@@ -349,87 +349,90 @@ export const onestConfirmSchema = {
 						},
 						payments: {
 							type: "array",
-							properties: {
-								params: {
-									type: "object",
-									properties: {
-										currency: {
-											type: "string",
-										},
-										transaction_id: {
-											type: "string",
-										},
-										amount: {
-											type: "string",
-										},
-									},
-									required: ["currency", "transaction_id", "amount"],
-								},
-								url: {
-									type: "string",
-								},
-								status: {
-									type: "string",
-									enum: PAYMENTS["status"]
-								},
-								type: {
-									type: "string",
-									enum: PAYMENTS["order_status"],
-								},
-								collected_by: {
-									type: "string",
-									enum: PAYMENTS["collected_by"],
-								},
-								tags: {
-									type: "object",
-									properties: {
-										descriptor: {
-											type: "object",
-											properties: {
-												code: {
-													type: "string",
-													const: "SETTLEMENT_DETAILS",
-												},
+							items: {
+								type: 'object',
+								properties: {
+									params: {
+										type: "object",
+										properties: {
+											currency: {
+												type: "string",
 											},
-											required: ["code"],
+											transaction_id: {
+												type: "string",
+											},
+											amount: {
+												type: "string",
+											},
 										},
-										list: {
-											type: "array",
-											items: {
+										required: ["currency", "transaction_id", "amount"],
+									},
+									url: {
+										type: "string",
+									},
+									status: {
+										type: "string",
+										enum: PAYMENTS["status"]
+									},
+									type: {
+										type: "string",
+										enum: PAYMENTS["order_status"],
+									},
+									collected_by: {
+										type: "string",
+										enum: PAYMENTS["collected_by"],
+									},
+									tags: {
+										type: "object",
+										properties: {
+											descriptor: {
 												type: "object",
 												properties: {
-													descriptor: {
-														type: "object",
-														properties: {
-															code: {
-																type: "string",
-																enum: [
-																	"SETTLEMENT_COUNTERPARTY",
-																	"SETTLEMENT_PHASE",
-																	"SETTLEMENT_TYPE",
-																	"UPI_ADDRESS",
-																	"SETTLEMENT_BANK_ACCOUNT_NO",
-																	"SETTLEMENT_IFSC_CODE",
-																	"BENEFICIARY_NAME",
-																	"BANK_NAME",
-																	"BRANCH_NAME",
-																],
-															},
-														},
-														required: ["code"],
-													},
-													value: {
+													code: {
 														type: "string",
+														const: "SETTLEMENT_DETAILS",
 													},
 												},
-												required: ["descriptor", "value"],
+												required: ["code"],
+											},
+											list: {
+												type: "array",
+												items: {
+													type: "object",
+													properties: {
+														descriptor: {
+															type: "object",
+															properties: {
+																code: {
+																	type: "string",
+																	enum: [
+																		"SETTLEMENT_COUNTERPARTY",
+																		"SETTLEMENT_PHASE",
+																		"SETTLEMENT_TYPE",
+																		"UPI_ADDRESS",
+																		"SETTLEMENT_BANK_ACCOUNT_NO",
+																		"SETTLEMENT_IFSC_CODE",
+																		"BENEFICIARY_NAME",
+																		"BANK_NAME",
+																		"BRANCH_NAME",
+																	],
+																},
+															},
+															required: ["code"],
+														},
+														value: {
+															type: "string",
+														},
+													},
+													required: ["descriptor", "value"],
+												},
 											},
 										},
+										required: ["descriptor", "list"],
 									},
-									required: ["descriptor", "list"],
 								},
-							},
-							required: ["params", "status", "type", "collected_by", "tags"],
+								required: ["params", "status", "type", "collected_by", "tags"],
+							}
 						},
 					},
 					required: [

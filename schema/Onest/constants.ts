@@ -33,6 +33,8 @@ const PAYMENTS = {
 };
 const JOBS_TYPE = ["lead", "recruitment", "lead & recruitment"];
 const STATUS = {
-	CREATED: 'Created'
+	CREATED: 'Created',
+	ACTIVE: 'Active',
+	COMPLETED: 'Completed'
 }
 export { DOMAIN, VERSION, FULFILLMENT_STATES, FULFILLMENT_STATE ,PAYMENTS, JOBS_TYPE, STATUS };
