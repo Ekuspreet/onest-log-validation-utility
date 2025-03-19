@@ -9,7 +9,11 @@ import _ from 'lodash'
 export function checkUpdate(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
-    
+    const onUpdateUnsolicited = getValue(`${actions.ON_UPDATE_EXTENDED}`)
+    if(!onUpdateUnsolicited){
+        errorObj.critical_error = `errors need to be resolved in previous calls first.`
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }    
 
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.UPDATE] = 'JSON cannot be empty'
@@ -34,7 +38,7 @@ export function checkUpdate(data: any, msgIdSet: Set<string>) {
     }
     const update = data;
     const order_id = getValue(`order_id`);
-    if(_.isEqual(order_id, update.message.order.id)){
+    if(!_.isEqual(order_id, update.message.order.id)){
       errorObj[`invalid_order_id_error`] = `order id provided here is invalid and should match with confirm call.`
       return Object.keys(errorObj).length > 0 && errorObj
     }
@@ -44,7 +48,7 @@ export function checkUpdate(data: any, msgIdSet: Set<string>) {
         errorObj[`invalid_status_error`] = `Status in ${actions.UPDATE} for ${FULFILLMENT_STATE.APPLICATION_REJECTED} must be ${STATUS.ACTIVE}.`
       }
     }
-
+    
 
     setValue(`${actions.UPDATE}`, data)
     return Object.keys(errorObj).length > 0 && errorObj

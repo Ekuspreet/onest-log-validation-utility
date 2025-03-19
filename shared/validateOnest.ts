@@ -38,6 +38,7 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
         // response contains the errors in the payload.
         const response = getResponse(actionCall, payload[actionCall], msgIdSet, flow)
 
+        
         if (!_.isEmpty(response)) {
           logReport = { ...logReport, [actionCall]: response }
         }
@@ -70,19 +71,21 @@ export const validateOnestLogs = async (payload: any, domain: string, flow: stri
         case actions.CONFIRM:
           return Onest.checkConfirm(data, msgIdSet)
         case actions.ON_CONFIRM:
-          return Onest.checkOnConfirm(data, msgIdSet)
+          return Onest.checkOnConfirm(data, msgIdSet, flow)
         // case actions.CANCEL:
         //   return checkCancel(data, msgIdSet, flow, )
         // case actions.ON_CANCEL:
         //   return checkOnCancel(data, msgIdSet, flow,)
         case actions.STATUS:
           return Onest.checkStatus(data, msgIdSet, flow)
-        case actions.ON_STATUS:
+        case actions.ON_STATUS_ACCEPTED:
+        case actions.ON_STATUS_ASSESSMENT:
+        case actions.ON_STATUS_REJECTED:  
           return Onest.checkOnStatus(data, msgIdSet, flow, actionCall)
         case actions.UPDATE:
           return Onest.checkUpdate(data, msgIdSet)
         case actions.ON_UPDATE:
-        case actions.ON_UPDATE_UNSOLICITED:
+        case actions.ON_UPDATE_EXTENDED:
           return Onest.checkOnUpdate(data, msgIdSet, actionCall)
         default:
           return null

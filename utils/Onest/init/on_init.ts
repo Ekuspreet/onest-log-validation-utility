@@ -2,7 +2,7 @@
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
-import { checkOnestContext, skipErrors } from '../common'
+import { checkOnestContext, comparePayments, paymentTagsOne, skipErrors, validateQuoteTrail } from '../common'
 import _ from 'lodash'
 import { getValue, setValue } from '../../../shared/dao'
 import {
@@ -12,9 +12,9 @@ import {
 export function checkOnInit(data: any, msgIdSet: Set<string>, actionCall: string) {
   const errorObj: any = {}
   try {
-
+    
     const init = getValue(`${actions.INIT}`)
-    if(!init){
+    if (!init) {
       errorObj.critical_error = `errors need to be resolved in previous calls first.`
       return Object.keys(errorObj).length > 0 && errorObj;
     }
@@ -42,9 +42,8 @@ export function checkOnInit(data: any, msgIdSet: Set<string>, actionCall: string
     }
     const onInit = data;
     const onSelectQuote = getValue(`${actions.ON_SELECT}`).message.order.quote;
-   
-    try {
 
+    try {
       // Check provider equality
       if (!_.isEqual(onInit.message.order.provider, init.message.order.provider)) {
         errorObj[`incorrect_provider_error`] = `Provider ${onInit.message.order.provider.id} does not match with selected provider.`;
@@ -68,16 +67,28 @@ export function checkOnInit(data: any, msgIdSet: Set<string>, actionCall: string
           }
         })
       })
-
+      if (hasIdMismatch) {
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }
       // Checking for the Quote Trail.
       if (!_.isEqual(onInit.message.order.quote, onSelectQuote)) {
         errorObj[`quote_mismatch_error`] = `Quote in on_init does not match with quote trail.`;
       }
 
-      // Checking for the payments object
-      if (!_.isEqual(onInit.message.order.payments, init.message.order.payments)) {
-        errorObj[`payments_mismatch_error`] = `Payments in on_init must match to the payments in init.`;
-      }
+      // // Checking for the payments object
+      // if (!_.isEqual(onInit.message.order.payments, init.message.order.payments)) {
+      //   errorObj[`payments_mismatch_error`] = `Payments in on_init must match to the payments in init.`;
+      // }
+      comparePayments(onInit.message.order.payments[0],
+        init.message.order.payments[0],
+        actions.ON_INIT,
+        actions.INIT,
+        errorObj,
+        paymentTagsOne,
+        ["collected_by", "type"]
+      )
+
+      validateQuoteTrail(onInit.message.order.quote, errorObj)
       // Now using the hasIdMismatch FLAG for FULFILLMENTS Now.
 
       onInit.message.order.fulfillments.forEach((fulfillment: any) => {
@@ -102,7 +113,7 @@ export function checkOnInit(data: any, msgIdSet: Set<string>, actionCall: string
           errorObj[`incorrect_fulfillment_state_error`] = `the correct fulfillment State in ${actionCall} should be ${FULFILLMENT_STATE.APPLICATION_FILLED}`;
         }
 
-        if(!(fulfillment.state.updated_at === onInit.context.timestamp)){
+        if (!(fulfillment.state.updated_at === onInit.context.timestamp)) {
           errorObj[`incorrect_updated_timestamp_error`] = `the correct updated_at in ${actionCall} should be context.timestamp.`;
         }
       })
@@ -111,6 +122,9 @@ export function checkOnInit(data: any, msgIdSet: Set<string>, actionCall: string
         return Object.keys(errorObj).length > 0 && errorObj;
       }
       setValue(`${actionCall}`, data);
+      
+    return Object.keys(errorObj).length > 0 && errorObj
+
     } catch (error: any) {
       logger.error(`Error while checking for JSON structure and required fields for ${actions.ON_INIT}: ${error.stack}`)
       return {
@@ -118,7 +132,6 @@ export function checkOnInit(data: any, msgIdSet: Set<string>, actionCall: string
       }
     }
 
-    return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {
     logger.error(`Error while checking for JSON structure and required fields for ${actions.ON_INIT}: ${error.stack}`)
     return {

@@ -71,7 +71,6 @@ export function checkSelect(data: any, msgIdSet: Set<string>) {
 
       // Fulfillment selected must be present in on_search.
       const availibleFulfillmentsForItem = new Set(getValue(`${actions.ON_SEARCH}_${selectedProviderId}_${select.message.order.items[0].id}_fulfillments`))
-      console.log(availibleFulfillmentsForItem);
       select.message.order.fulfillments.forEach((fulfillment: any) => {
         if (!availibleFulfillmentsForItem.has(fulfillment.id)) {
           errorObj[`item_fulfillment_not_availible_error_${fulfillment.id}`] =

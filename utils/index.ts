@@ -222,7 +222,7 @@ const validate_schema_for_onest_json = (vertical: string, api: string, data: any
 
 export const validateOnestSchema = (domain: string, api: string, data: any) => {
   try {
-    logger.info(`Inside Schema Validation for domain: ${domain}, api: ${api}`)
+   
     const errObj: any = {}
 
     const schmaVldtr = validate_schema_for_onest_json(domain, api, data)

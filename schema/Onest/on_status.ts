@@ -270,9 +270,11 @@ export const onestOnStatusSchema = {
             },
             payments: {
               type: 'array',
-              properties: {
-                params: {
-                  type: 'object',
+              items: {
+                type: 'object',
+                properties: {
+                  params: {
+                    type: 'object',
                   properties: {
                     currency: {
                       type: 'string',
@@ -291,7 +293,7 @@ export const onestOnStatusSchema = {
                 },
                 status: {
                   type: 'string',
-                  const: PAYMENTS['status'],
+                  enum: PAYMENTS['status'],
                 },
                 type: {
                   type: 'string',
@@ -325,15 +327,16 @@ export const onestOnStatusSchema = {
                               code: {
                                 type: 'string',
                                 enum: [
-                                  'SETTLEMENT_COUNTERPARTY',
-                                  'SETTLEMENT_PHASE',
-                                  'SETTLEMENT_TYPE',
-                                  'UPI_ADDRESS',
-                                  'SETTLEMENT_BANK_ACCOUNT_NO',
-                                  'SETTLEMENT_IFSC_CODE',
-                                  'BENEFICIARY_NAME',
-                                  'BANK_NAME',
-                                  'BRANCH_NAME',
+                                  "SETTLEMENT_COUNTERPARTY",
+                                  "SETTLEMENT_PHASE",
+                                  "SETTLEMENT_TYPE",
+                                  "SETTLEMENT_BASIS",
+                                  "SETTLEMENT_WINDOW",
+                                  "SETTLEMENT_BANK_ACCOUNT_NO",
+                                  "SETTLEMENT_IFSC_CODE",
+                                  "BENEFICIARY_NAME",
+                                  "BANK_NAME",
+                                  "BRANCH_NAME"
                                 ],
                               },
                             },
@@ -351,6 +354,7 @@ export const onestOnStatusSchema = {
                 },
               },
               required: ['params', 'status', 'type', 'collected_by', 'tags'],
+              }
             },
             updated_at: {
               type: 'string',

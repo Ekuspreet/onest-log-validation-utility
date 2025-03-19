@@ -15,7 +15,10 @@ export const actions = {
   ON_CONFIRM: 'on_confirm',
   ON_STATUS: 'on_status',
   ON_UPDATE: 'on_update',
-  ON_UPDATE_UNSOLICITED: 'on_update_unsolicited'
+  ON_UPDATE_EXTENDED: 'on_update_extended',
+  ON_STATUS_ACCEPTED: 'on_status_accepted',
+  ON_STATUS_ASSESSMENT: 'on_status_assessment',
+  ON_STATUS_REJECTED: 'on_status_rejected'
 }
 export const ONEST_CONTEXT_TTL = 'PT30S';
 // This will store all the error reason codes for ONEST.
@@ -49,9 +52,9 @@ export function flowOrder(flow: string): string[] {
         actions.ON_INIT_XINPUT,
         actions.CONFIRM,
         actions.ON_CONFIRM,
-        actions.STATUS,
-        actions.ON_STATUS,
-        actions.ON_UPDATE_UNSOLICITED,
+        actions.ON_STATUS_ACCEPTED,
+        actions.ON_STATUS_ASSESSMENT,
+        actions.ON_UPDATE_EXTENDED,
         actions.UPDATE,
         actions.ON_UPDATE,
       ]
@@ -65,7 +68,7 @@ export function flowOrder(flow: string): string[] {
         actions.ON_INIT,
         actions.CONFIRM,
         actions.ON_CONFIRM,
-        actions.ON_STATUS,
+        actions.ON_STATUS_REJECTED
       ]
     default:
       return []

@@ -2,7 +2,7 @@
 import { actions } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
-import { checkOnestContext, skipErrors } from '../common'
+import { checkOnestContext, comparePayments, paymentTagsOne, skipErrors } from '../common'
 import { getValue, setValue as _setValue, setValue } from '../../../shared/dao'
 import { STATUS } from '../../../schema/Onest/constants'
 import _ from 'lodash'
@@ -11,6 +11,7 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
 
+    
 
     const onInit = getValue(`${actions.ON_INIT_XINPUT}`)
     if (!onInit) {
@@ -43,7 +44,6 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
 
     const confirm = data;
     try {
-
       if(_.isEmpty(confirm.message.order.id)){
         return Object.keys(errorObj).length > 0 && errorObj;
       }
@@ -57,6 +57,7 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
         errorObj[`incorrect_provider_error`] = `Provider ${confirm.message.order.provider.id} does not match with selected provider.`;
         return Object.keys(errorObj).length > 0 && errorObj;
       }
+      setValue(`provider`, confirm.message.order.provider)
 
       // Currently this flag is being used for ITEM.
       let hasIdMismatch = false;
@@ -83,9 +84,18 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
         errorObj[`quote_mismatch_error`] = `Quote in ${actions.CONFIRM} does not match with quote trail.`;
       }
 
-      // Checking for the payments object
 
-      onInit.message.order.fulfillments.forEach((fulfillment: any) => {
+      // Payment Object Calculations
+        comparePayments(confirm.message.order.payments[0],
+                onInit.message.order.payments[0],
+                actions.CONFIRM,
+                actions.ON_INIT,
+                errorObj,
+                paymentTagsOne,
+                ["collected_by", "type"]
+              )
+
+      confirm.message.order.fulfillments.forEach((fulfillment: any) => {
         const onInitFulfillment = onInit.message.order.fulfillments.find((oi_fulfillment: any) => oi_fulfillment.id === fulfillment.id)
         if (!onInitFulfillment) {
           errorObj[`invalid_fulfillment_error`] = `Fulfillment with id ${fulfillment.id} does not exist in Fulfillments in ${actions.ON_INIT}.`;
@@ -100,7 +110,7 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
           }
 
         });
-        // Payment Object Calculations
+        
         if(!(fulfillment.state.updated_at === confirm.context.timestamp)){
           errorObj[`incorrect_updated_timestamp_error`] = `the correct updated_at in ${actions.CONFIRM} should be context.timestamp.`;
         }
@@ -108,6 +118,8 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
       if (hasIdMismatch) {
         return Object.keys(errorObj).length > 0 && errorObj;
       }
+
+      setValue(`${actions.CONFIRM}`, data)
     } catch (error: any) {
       logger.error(`Error while checking for JSON structure and required fields for ${actions.CONFIRM}: ${error.stack}`)
       return {
@@ -115,8 +127,7 @@ export function checkConfirm(data: any, msgIdSet: Set<string>) {
       }
     }
 
-    // console.log(onInit);
-    // const confirm = data;
+
     return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {
     logger.error(`Error while checking for JSON structure and required fields for ${actions.CONFIRM}: ${error.stack}`)
