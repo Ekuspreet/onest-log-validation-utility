@@ -10,7 +10,7 @@ import {
 } from '../..'
 import { setValue } from '../../../shared/dao'
 import _ from 'lodash'
-import { checkOnestContext, setDifference, skipErrors } from '../common'
+import { checkOnestContext, skipErrors } from '../common'
 
 export function checkOnSearch(data: any, msgIdSet: any) {
   try {
@@ -153,19 +153,19 @@ export function checkOnSearch(data: any, msgIdSet: any) {
         setValue(`${actions.ON_SEARCH}_${provider.id}_locations`, locationIds);
         setValue(`${actions.ON_SEARCH}_${provider.id}_selected_locations`, selectedLocationIds);
 
-        const unSelectedFulfillments = setDifference(fulfillmentIds, selectedFulfillmentIds)
-        const unSelectedLocations = setDifference(locationIds, selectedLocationIds)
-        if (!_.isEmpty(unSelectedFulfillments)) {
-          errorObj[`unused_fulfillment_id_error_${index}`] =
-            `Unused fulfillment IDs found in provider ${provider.id}: ${unSelectedFulfillments.join(", ")}`;
-        }
+        // const unSelectedFulfillments = setDifference(fulfillmentIds, selectedFulfillmentIds)
+        // const unSelectedLocations = setDifference(locationIds, selectedLocationIds)
+        // if (!_.isEmpty(unSelectedFulfillments)) {
+        //   errorObj[`unused_fulfillment_id_error_${index}`] =
+        //     `Unused fulfillment IDs found in provider ${provider.id}: ${unSelectedFulfillments.join(", ")}`;
+        // }
 
 
-        // Ensuring that no obsolete locations remain.
-        if (!_.isEmpty(unSelectedLocations)) {
-          errorObj[`unused_location_id_error_${index}`] =
-            `Unused location IDs found in provider ${provider.id}: ${unSelectedLocations.join(", ")}`;
-        }
+        // // Ensuring that no obsolete locations remain.
+        // if (!_.isEmpty(unSelectedLocations)) {
+        //   errorObj[`unused_location_id_error_${index}`] =
+        //     `Unused location IDs found in provider ${provider.id}: ${unSelectedLocations.join(", ")}`;
+        // }
       })
 
 

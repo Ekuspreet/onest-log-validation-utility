@@ -18,7 +18,8 @@ export const actions = {
   ON_UPDATE_EXTENDED: 'on_update_extended',
   ON_STATUS_ACCEPTED: 'on_status_accepted',
   ON_STATUS_ASSESSMENT: 'on_status_assessment',
-  ON_STATUS_REJECTED: 'on_status_rejected'
+  ON_STATUS_REJECTED: 'on_status_rejected',
+  ON_STATUS_EXTENDED: 'on_status_extended'
 }
 export const ONEST_CONTEXT_TTL = 'PT30S';
 // This will store all the error reason codes for ONEST.
@@ -38,8 +39,6 @@ export function flowOrder(flow: string): string[] {
       return [
         actions.SEARCH, 
         actions.ON_SEARCH, 
-        actions.SEARCH_INC, 
-        actions.ON_SEARCH_INC
       ]
     case onestFlows.flowTwo:
       return [

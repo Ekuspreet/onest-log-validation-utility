@@ -8,6 +8,7 @@ export function checkSearchIncremental(data: any, msgIdSet: any) {
   try {
     
 
+    // Currently not in use.
     if (!data || isObjectEmpty(data)) {
       errorObj[actions.SEARCH_INC] = 'JSON cannot be empty'
       return

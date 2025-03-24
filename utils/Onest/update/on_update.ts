@@ -9,8 +9,34 @@ import { FULFILLMENT_STATE, STATUS } from '../../../schema/Onest/constants'
 export function checkOnUpdate(data: any, msgIdSet: Set<string>, actionCall: string) {
   const errorObj: any = {}
   try {
-
     const latestFulfillment = getValue("latest_fulfillment");
+    if(latestFulfillment === FULFILLMENT_STATE.OFFER_EXTENDED && actionCall === actions.ON_UPDATE_EXTENDED){
+      return
+    }
+    if (!data || isObjectEmpty(data)) {
+      errorObj[actions.ON_UPDATE] = 'JSON cannot be empty'
+      return
+    }
+
+    if (!data.message || !data.context || isObjectEmpty(data.message)) {
+      errorObj['missingFields'] = '/context, /message is missing or empty'
+      return Object.keys(errorObj).length > 0 && errorObj
+    }
+
+    const contextRes: any = checkOnestContext(data.context, actionCall, msgIdSet)
+    if (!contextRes.isValid) {
+      Object.assign(errorObj, contextRes.errors)
+      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+        return errorObj;
+      }
+    }
+
+    const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_UPDATE, data)
+
+    if (schemaValidation !== 'success') {
+      Object.assign(errorObj, schemaValidation)
+    }
+
     // Previous calls exist error
     if (actionCall === actions.ON_UPDATE_EXTENDED && !(latestFulfillment === FULFILLMENT_STATE.ASSESSMENT_IN_PROGRESS)) {
       errorObj.critical_error = `errors need to be resolved in previous calls first.`
@@ -36,28 +62,6 @@ export function checkOnUpdate(data: any, msgIdSet: Set<string>, actionCall: stri
     }
 
 
-    if (!data || isObjectEmpty(data)) {
-      errorObj[actions.ON_UPDATE] = 'JSON cannot be empty'
-      return
-    }
-
-    if (!data.message || !data.context || isObjectEmpty(data.message)) {
-      errorObj['missingFields'] = '/context, /message is missing or empty'
-      return Object.keys(errorObj).length > 0 && errorObj
-    }
-    const contextRes: any = checkOnestContext(data.context, actionCall, msgIdSet)
-    if (!contextRes.isValid) {
-      Object.assign(errorObj, contextRes.errors)
-      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
-        return errorObj;
-      }
-    }
-
-    const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_UPDATE, data)
-
-    if (schemaValidation !== 'success') {
-      Object.assign(errorObj, schemaValidation)
-    }
     const onUpdate = data;
     const onConfirm = getValue(`${actions.ON_CONFIRM}`)
     const order_id = getValue(`order_id`);

@@ -1,5 +1,5 @@
 
-import { actions } from '../../../constants/onest'
+import { actions, onestFlows } from '../../../constants/onest'
 import { logger } from '../../../shared/logger'
 import { isObjectEmpty, validateOnestSchema } from '../..'
 import { checkOnestContext, skipErrors } from '../common'
@@ -9,21 +9,17 @@ import _ from 'lodash'
 export function checkUpdate(data: any, msgIdSet: Set<string>) {
   const errorObj: any = {}
   try {
-    const onUpdateUnsolicited = getValue(`${actions.ON_UPDATE_EXTENDED}`)
-    if(!onUpdateUnsolicited){
-        errorObj.critical_error = `errors need to be resolved in previous calls first.`
-        return Object.keys(errorObj).length > 0 && errorObj;
-      }    
-
+   
     if (!data || isObjectEmpty(data)) {
-      errorObj[actions.UPDATE] = 'JSON cannot be empty'
-      return
+      errorObj['missing_data'] = 'JSON cannot be empty'
+      return  Object.keys(errorObj).length > 0 && errorObj
     }
 
     if (!data.message || !data.context || isObjectEmpty(data.message)) {
       errorObj['missingFields'] = '/context, /message is missing or empty'
       return Object.keys(errorObj).length > 0 && errorObj
     }
+    // Context level checks
     const contextRes: any = checkOnestContext(data.context, actions.UPDATE, msgIdSet)
        if(!contextRes.isValid) {
          Object.assign(errorObj, contextRes.errors)
@@ -31,11 +27,25 @@ export function checkUpdate(data: any, msgIdSet: Set<string>) {
            return errorObj;
          }
        }
+    // Schema Validation
     const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.UPDATE, data)
 
     if (schemaValidation !== 'success') {
       Object.assign(errorObj, schemaValidation)
     }
+
+    const latest_fulfillment = getValue(`latest_fulfillment`);
+    if(!(latest_fulfillment === FULFILLMENT_STATE.OFFER_EXTENDED)){
+      errorObj.critical_error = `errors need to be resolved in previous calls first.`
+        return Object.keys(errorObj).length > 0 && errorObj;
+    }
+
+    const onUpdateUnsolicited = getValue(`${actions.ON_UPDATE_EXTENDED}`)
+    if(!onUpdateUnsolicited){
+        errorObj.critical_error = `errors need to be resolved in previous calls first.`
+        return Object.keys(errorObj).length > 0 && errorObj;
+      }    
+
     const update = data;
     const order_id = getValue(`order_id`);
     if(!_.isEqual(order_id, update.message.order.id)){
@@ -43,13 +53,13 @@ export function checkUpdate(data: any, msgIdSet: Set<string>) {
       return Object.keys(errorObj).length > 0 && errorObj
     }
 
-    if ((update.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.APPLICATION_ACCEPTED) || (update.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.APPLICATION_REJECTED)  ) {
-      if (!(update.message.order.status === STATUS.COMPLETED)) {
-        errorObj[`invalid_status_error`] = `Status in ${actions.UPDATE} for ${FULFILLMENT_STATE.APPLICATION_REJECTED} must be ${STATUS.ACTIVE}.`
-      }
+    if (!(update.message.order.fulfillments[0].state.descriptor.code === FULFILLMENT_STATE.OFFER_ACCEPTED)) {
+      errorObj[`invalid_fulfillment_state_error`] = `Fulfillment State in ${actions.UPDATE} for ${onestFlows.flowTwo} must be ${FULFILLMENT_STATE.OFFER_ACCEPTED}.`
+      return Object.keys(errorObj).length > 0 && errorObj  
     }
-    
-
+    if (!(update.message.order.status === STATUS.COMPLETED)) {
+      errorObj[`invalid_status_error`] = `Status in ${actions.UPDATE} for ${FULFILLMENT_STATE.APPLICATION_REJECTED} must be ${STATUS.ACTIVE}.`
+    }
     setValue(`${actions.UPDATE}`, data)
     return Object.keys(errorObj).length > 0 && errorObj
   } catch (error: any) {

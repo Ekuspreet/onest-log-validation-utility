@@ -7,10 +7,12 @@ import {
 } from '../..'
 import { getValue, setValue } from '../../../shared/dao'
 import _ from 'lodash'
-import { checkOnestContext, setDifference, skipErrors } from '../common'
+import { checkOnestContext, skipErrors } from '../common'
 
 export function checkOnSearchIncremental(data: any, msgIdSet: any) {
   try {
+
+    // Currently not in use.
     let errorObj: any = {}
     
 
@@ -54,7 +56,7 @@ export function checkOnSearchIncremental(data: any, msgIdSet: any) {
           return;
         }
         const providerChild = Object.keys(provider)
-        console.log(providerChild);
+        
         const changedValues = providerChild.filter(key => key !== 'id');
 
         // Gathering information about provider.
@@ -168,20 +170,20 @@ export function checkOnSearchIncremental(data: any, msgIdSet: any) {
         console.log("Merged Location IDs:", locationIds);
         console.log("Merged Selected Location IDs:", selectedLocationIds);
         // Compute unselected fulfillments and locations
-        const unSelectedFulfillments = setDifference(fulfillmentIds, selectedFulfillmentIds);
-        const unSelectedLocations = setDifference(locationIds, selectedLocationIds);
+        // const unSelectedFulfillments = setDifference(fulfillmentIds, selectedFulfillmentIds);
+        // const unSelectedLocations = setDifference(locationIds, selectedLocationIds);
 
-        if (!_.isEmpty(unSelectedFulfillments)) {
-          errorObj[`unused_fulfillment_id_error_${index}`] =
-            `Unused fulfillment IDs found in provider ${provider.id}: ${unSelectedFulfillments.join(", ")}`;
-        }
+        // if (!_.isEmpty(unSelectedFulfillments)) {
+        //   errorObj[`unused_fulfillment_id_error_${index}`] =
+        //     `Unused fulfillment IDs found in provider ${provider.id}: ${unSelectedFulfillments.join(", ")}`;
+        // }
 
 
-        // Ensuring that no obsolete locations remain.
-        if (!_.isEmpty(unSelectedLocations)) {
-          errorObj[`unused_location_id_error_${index}`] =
-            `Unused location IDs found in provider ${provider.id}: ${unSelectedLocations.join(", ")}`;
-        }
+        // // Ensuring that no obsolete locations remain.
+        // if (!_.isEmpty(unSelectedLocations)) {
+        //   errorObj[`unused_location_id_error_${index}`] =
+        //     `Unused location IDs found in provider ${provider.id}: ${unSelectedLocations.join(", ")}`;
+        // }
       })
 
 

@@ -48,7 +48,7 @@ export function checkInit(data: any, msgIdSet: Set<string>) {
         errorObj[`incorrect_provider_error`] = `Provider ${onSelect.message.order.provider.id} does not match with selected provider.`;
         return Object.keys(errorObj).length > 0 && errorObj;
       }
-      
+      console.log(onSelect.message.order.items, init.message.order.items)
       //  item.id must be a valid item for that provider
       if (!_.isEqual(onSelect.message.order.items, init.message.order.items)){
         errorObj[`incorrect_items_error`] = `Items do not match between ${actions.INIT} and ${actions.ON_SELECT}.`;

@@ -177,9 +177,11 @@ export const onestOnSearchSchema = {
                             },
                           },
                           required: ['code'],
+                          additionalProperties: false,
                         },
                       },
                       required: ['id', 'city', 'state'],
+                      
                     },
                   },
                   items: {

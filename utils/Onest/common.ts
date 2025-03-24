@@ -301,3 +301,4 @@ export const extractTags = (tagsObj: any) => {
   }
   return new Map(tagsObj.list.map((item: any) => [_.get(item, "descriptor.code"), _.get(item, "value")]));
 };
+

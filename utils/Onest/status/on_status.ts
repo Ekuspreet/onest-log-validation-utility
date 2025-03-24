@@ -10,6 +10,40 @@ import { FULFILLMENT_STATE, STATUS } from '../../../schema/Onest/constants'
 export function checkOnStatus(data: any, msgIdSet: Set<string>, flow: string, actionCall: keyof typeof actions) {
   const errorObj: any = {}
   try {
+    // Skips
+    if(actionCall === actions.ON_STATUS_EXTENDED && (!data || isObjectEmpty(data))){
+      return
+    }
+    if (!data || isObjectEmpty(data)) {
+      errorObj['missing_data'] = 'JSON cannot be empty'
+      return Object.keys(errorObj).length > 0 && errorObj;
+    }
+
+    if (!data.message || !data.context || isObjectEmpty(data.message)) {
+      errorObj['missingFields'] = '/context, /message is missing or empty'
+      return Object.keys(errorObj).length > 0 && errorObj
+    }
+    const contextRes: any = checkOnestContext(data.context, actionCall, msgIdSet)
+    if (!contextRes.isValid) {
+      Object.assign(errorObj, contextRes.errors)
+      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
+        return errorObj;
+      }
+    }
+    const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_STATUS, data)
+
+    if (schemaValidation !== 'success') {
+      Object.assign(errorObj, schemaValidation)
+    }
+
+
+    const onConfirm = getValue(`${actions.ON_CONFIRM}`)
+    if (!onConfirm) {
+      errorObj.critical_error = `errors need to be resolved in previous calls first.`
+      return Object.keys(errorObj).length > 0 && errorObj;
+    }
+
+
 
     const latestFulfillment = getValue("latest_fulfillment");
 
@@ -43,33 +77,7 @@ export function checkOnStatus(data: any, msgIdSet: Set<string>, flow: string, ac
       return Object.keys(errorObj).length > 0 && errorObj;
     }
 
-    const onConfirm = getValue(`${actions.ON_CONFIRM}`)
-    if (!onConfirm) {
-      errorObj.critical_error = `errors need to be resolved in previous calls first.`
-      return Object.keys(errorObj).length > 0 && errorObj;
-    }
 
-    if (!data || isObjectEmpty(data)) {
-      errorObj['missing_data'] = 'JSON cannot be empty'
-      return Object.keys(errorObj).length > 0 && errorObj;
-    }
-
-    if (!data.message || !data.context || isObjectEmpty(data.message)) {
-      errorObj['missingFields'] = '/context, /message is missing or empty'
-      return Object.keys(errorObj).length > 0 && errorObj
-    }
-    const contextRes: any = checkOnestContext(data.context, actionCall, msgIdSet)
-    if (!contextRes.isValid) {
-      Object.assign(errorObj, contextRes.errors)
-      if (contextRes.errors && skipErrors.some(error => contextRes.errors.hasOwnProperty(error))) {
-        return errorObj;
-      }
-    }
-    const schemaValidation = validateOnestSchema(data.context.domain.split(':')[1], actions.ON_STATUS, data)
-
-    if (schemaValidation !== 'success') {
-      Object.assign(errorObj, schemaValidation)
-    }
     const onStatus = data;
     const order_id = getValue(`order_id`);
     if (!_.isEqual(order_id, onStatus.message.order.id)) {
@@ -153,10 +161,6 @@ export function checkOnStatus(data: any, msgIdSet: Set<string>, flow: string, ac
       setValue(`latest_fulfillment`, fulfillment.state.descriptor.code)
     });
 
-    // Payments object check
-    // if (!_.isEqual(onStatus.message.order.payments, onConfirm.message.order.payments)) {
-    //   errorObj[`payments_mismatch_error`] = `Payment in ${actions.ON_STATUS} does not match with payments in ${actions.ON_CONFIRM}.`;
-    // }
      comparePayments(onStatus.message.order.payments[0],
             onConfirm.message.order.payments[0],
             actionCall,
